@@ -1,5 +1,7 @@
 # config.py
+from typing import Callable, Any
 from dataclasses import dataclass
+
 
 @dataclass
 class SimConfig:
@@ -9,7 +11,9 @@ class SimConfig:
     num_chains: int = 3
 
     # Instance generator: "toy_1" or "random"
-    instance_generator: str = "toy_1"
+    instance_generator: str = \
+        "generate_toy_instance_1"
+        # "generate_random_instance_1"
 
     # Randomness (useful for reproducibility)
     random_seed: int = 42

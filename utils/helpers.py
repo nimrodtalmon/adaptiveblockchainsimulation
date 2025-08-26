@@ -30,6 +30,7 @@ def sample_int(low: int, high: int) -> int:
     """
     return int(random.randint(low, high))
 
+
 def generate_random_lambdas(keys: Tuple[str, str, str] = ("apps", "ops", "sys")) -> Dict[str, float]:
     """
     Sample a random convex combination over the given keys (i.e., Dirichlet(1,...,1)).
@@ -38,7 +39,6 @@ def generate_random_lambdas(keys: Tuple[str, str, str] = ("apps", "ops", "sys"))
     raw = [random.random() for _ in keys]     # each in [0,1)
     total = sum(raw) or 1.0                   # guard against pathological zero (theoretically impossible)
     return {k: v / total for k, v in zip(keys, raw)}
-
 
 
 def print_instance(instance, max_rows=5):

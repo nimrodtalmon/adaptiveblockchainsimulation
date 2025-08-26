@@ -5,6 +5,28 @@ from utils.helpers import sample_int, generate_random_lambdas
 from config import SimConfig; config = SimConfig()
 
 
+def generate_instance(config):
+    """
+    Look up and call the generator function specified by name in config.instance_generator.
+    The name must match a zero-arg callable defined in THIS module (core.instance_generator).
+    """
+    name = config.instance_generator
+    if not isinstance(name, str) or not name:
+        raise TypeError("config.instance_generator must be a non-empty string")
+
+    try:
+        fn = globals()[name]  # directly from this module's namespace
+    except KeyError as e:
+        raise ValueError(
+            f"Unknown instance generator '{name}' in core.instance_generator"
+        ) from e
+
+    if not callable(fn):
+        raise TypeError(f"Attribute '{name}' exists but is not callable")
+
+    return fn()
+
+
 def generate_toy_instance_1():
     """
     Returns a small, fixed instance for manual verification.
