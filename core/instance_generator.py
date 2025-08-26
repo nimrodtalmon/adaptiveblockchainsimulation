@@ -1,24 +1,9 @@
 # core/instance_generator.py
-
 import random
 from typing import Dict, Tuple
-
+from utils.helpers import sample_int, generate_random_lambdas
 from config import SimConfig; config = SimConfig()
 
-def _sample_int(low: int, high: int) -> int:
-    """
-    Inclusive integer sampler.
-    """
-    return int(random.randint(low, high))
-
-def _generate_random_lambdas(keys: Tuple[str, str, str] = ("apps", "ops", "sys")) -> Dict[str, float]:
-    """
-    Sample a random convex combination over the given keys (i.e., Dirichlet(1,...,1)).
-    Ensures values are >=0 and sum to 1 (up to float precision).
-    """
-    raw = [random.random() for _ in keys]     # each in [0,1)
-    total = sum(raw) or 1.0                   # guard against pathological zero (theoretically impossible)
-    return {k: v / total for k, v in zip(keys, raw)}
 
 def generate_toy_instance_1():
     """
@@ -98,25 +83,25 @@ def generate_random_instance(
     apps = []
     for _ in range(num_apps):
         app = {
-            "gas": _sample_int(10, 100),
-            "stake": _sample_int(10, 100),
-            "fee2gas": _sample_int(1, 10)
+            "gas": sample_int(10, 100),
+            "stake": sample_int(10, 100),
+            "fee2gas": sample_int(1, 10)
         }
         apps.append(app)
 
     ops = []
     for _ in range(num_ops):
         op = {
-            "gas": _sample_int(10, 100),
-            "stake": _sample_int(10, 100),
-            "fee2gas": _sample_int(1, 10)
+            "gas": sample_int(10, 100),
+            "stake": sample_int(10, 100),
+            "fee2gas": sample_int(1, 10)
         }
         ops.append(op)
 
     chains = list(range(num_chains))
 
     # Random convex combination for lambdas
-    lambdas = _generate_random_lambdas(("apps", "ops", "sys"))
+    lambdas = generate_random_lambdas(("apps", "ops", "sys"))
 
     return {
         "apps": apps,

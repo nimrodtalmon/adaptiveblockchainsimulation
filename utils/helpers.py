@@ -3,10 +3,13 @@
 import os
 import random
 import numpy as np
+from typing import Dict, Tuple
 from config import SimConfig; config = SimConfig()
+
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear && printf "\\033[3J"')
+
 
 def take_care_of_random_seed():
     if config.random_seed == -1:
@@ -19,6 +22,24 @@ def take_care_of_random_seed():
 
     random.seed(seed)
     np.random.seed(seed)
+
+
+def sample_int(low: int, high: int) -> int:
+    """
+    Inclusive integer sampler.
+    """
+    return int(random.randint(low, high))
+
+def generate_random_lambdas(keys: Tuple[str, str, str] = ("apps", "ops", "sys")) -> Dict[str, float]:
+    """
+    Sample a random convex combination over the given keys (i.e., Dirichlet(1,...,1)).
+    Ensures values are >=0 and sum to 1 (up to float precision).
+    """
+    raw = [random.random() for _ in keys]     # each in [0,1)
+    total = sum(raw) or 1.0                   # guard against pathological zero (theoretically impossible)
+    return {k: v / total for k, v in zip(keys, raw)}
+
+
 
 def print_instance(instance, max_rows=5):
     """
@@ -42,6 +63,7 @@ def print_instance(instance, max_rows=5):
     print(f"\nChains: {len(instance['chains'])} (IDs: {instance['chains'][:max_rows]})")
     if len(instance["chains"]) > max_rows:
         print(f"  ... ({len(instance['chains']) - max_rows} more)")
+
 
 def print_solution_with_utilities(solution, utilities):
     """
