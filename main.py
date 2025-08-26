@@ -13,14 +13,6 @@ def main():
     # Take care for random seed
     take_care_of_random_seed()
 
-    print("X MARKS THE SPOT")
-    print("(1) refactor the instance generator (and also the config file to switch)")
-    print("(2) refactor this TODO thing ;)")
-    print("(3) solve toy_1 by hand and see that we get it")
-    print("(4) add a way to see the action of Nevergrad as it converges..")
-    print("(5) continue with the simulation work plan")
-    exit()
-
     # Print hello
     print("\n>>> Adaptive Multichain Blockchain Simulation <<<")
 
