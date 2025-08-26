@@ -117,11 +117,26 @@ def evaluate_utilities(app_assignments, op_assignments, instance):
             share = 1 / len(ops_on_chain[c])
             fee = fee2gas_chain[c] * gas[c]
             op_util.append((fee * share) / ops[o]["stake"])
+            # print('JAJA:', fee, share, ops[o]["stake"], op_util)
+            
 
     sys_util = sum(fee2gas_chain[c] * gas[c] for c in chains)
 
     total_util = (lambdas["apps"] * sum(app_util) +
              lambdas["ops"] * sum(op_util) +
              lambdas["sys"] * sys_util)
+
+    # if True:
+    #     print("=== DEBUG utility computation ===")
+    #     print(f"App utils: {app_util}  -> sum={sum(app_util)}  "
+    #         f"weighted={lambdas['apps']}*{sum(app_util)}={lambdas['apps']*sum(app_util):.4f}")
+    #     print(f"Op utils:  {op_util}  -> sum={sum(op_util)}  "
+    #         f"weighted={lambdas['ops']}*{sum(op_util)}={lambdas['ops']*sum(op_util):.4f}")
+    #     print(f"Sys util: {sys_util} "
+    #         f"weighted={lambdas['sys']}*{sys_util}={lambdas['sys']*sys_util:.4f}")
+    #     print(f"Penalty: {PENALTY}*{violations} = {PENALTY*violations}")
+    #     print(f"Total utility = {total_util:.4f} - penalty = "
+    #         f"{total_util - PENALTY*violations:.4f}")
+    #     print("================================")
 
     return total_util - PENALTY * violations

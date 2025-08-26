@@ -29,61 +29,31 @@ def generate_instance(config):
 
 def generate_toy_instance_1():
     """
-    Returns a small, fixed instance for manual verification.
-
-    Instance details:
-      Chains: 1 (ID 0)
-      Apps:
-        App0: gas=10, stake=5, fee2gas=2
-        App1: gas=20, stake=8, fee2gas=3
-      Ops:
-        Op0: gas=15, stake=6, fee2gas=1
-        Op1: gas=25, stake=7, fee2gas=2
-      Lambdas: apps=0.5, ops=0.3, sys=0.2
-
-    Optimal assignment (by inspection):
-      - Assign both apps to Chain0
-      - Assign both ops to Chain0
-
-    Reasoning:
-      Demand_chain0 = 10 + 20 = 30
-      Supply_chain0 = 15 + 25 = 40
-      Gas_chain0 = min(30, 40) = 30
-      Stake_chain0 = 6 + 7 = 13
-      Fee2gas_chain0 = min(2, 3) = 2
-      Fee_chain0 = 2 * 30 = 60
-
-      App utilities:
-        App0 = gas_app0 * Gas/Demand = 10 * (30/30) = 10
-        App1 = 20 * (30/30) = 20
-        sum = 30
-
-      Op utilities:
-        Each op gets share = 1 / 2 = 0.5
-        Fee per op share = 60 * 0.5 = 30
-        Op0 util = 30 / stake0 = 30 / 6 = 5
-        Op1 util = 30 / 7 ≈ 4.2857
-        sum ≈ 9.2857
-
-      Sys utility:
-        Sys = Fee_chain0 = 60
-
-      Weighted total utility:
-        = 0.5 * 30 + 0.3 * 9.2857 + 0.2 * 60
-        = 15 + 2.7857 + 12
-        ≈ 29.7857
+    Instance (1 chain; 1 app; 1 operator):
+      App0: demands 10 gas; requires 5 stake; can offer fee2gas=2
+      Op0: supplies 15 gas; has 6 stake; requires fee2gas=1  
+    
+    Solution:
+      App and op on the chain (stake is fine)
+      There is 10 gas on the chain
+      The chain's fee2gas is 2 (this is what the app agrees; if we take min over apps)
+      So the total fee on the chain is 20
+       
+    Utilities:
+      App base util is 10 (gas computed for is 10)
+      Op base util is 20 / 6 = 3.333 (fee on chain is 20, only one op on chain, op stake is 6)
+      Sys base util is 20 (total network fee)
+      Weighted total = 0.1 * 10 + 0.2 * 3.333 + 0.7 * 20 = 15.667
     """
     return {
         "apps": [
-            {"gas": 10, "stake": 5, "fee2gas": 2},
-            {"gas": 20, "stake": 8, "fee2gas": 3},
+            {"gas": 10, "stake": 5, "fee2gas": 2},   
         ],
         "ops": [
-            {"gas": 15, "stake": 6, "fee2gas": 1},
-            {"gas": 25, "stake": 7, "fee2gas": 2},
+            {"gas": 15, "stake": 6, "fee2gas": 1},   
         ],
         "chains": [0],
-        "lambdas": {"apps": 0.5, "ops": 0.3, "sys": 0.2},
+        "lambdas": {"apps": 0.1, "ops": 0.2, "sys": 0.7},
     }
 
 
