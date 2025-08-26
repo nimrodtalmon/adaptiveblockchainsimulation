@@ -3,18 +3,18 @@
 import os
 import random
 import numpy as np
-from config import SIM_CONFIG
+from config import SimConfig; config = SimConfig()
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear && printf "\\033[3J"')
 
 def take_care_of_random_seed():
-    if SIM_CONFIG["random_seed"] == -1:
+    if config.random_seed == -1:
         # pick a random seed
         seed = random.randint(0, 2**32 - 1)
         print(f"[DEBUG] Using random seed: {seed}")
     else:
-        seed = SIM_CONFIG["random_seed"]
+        seed = config.random_seed
         print(f"[DEBUG] Using seed: {seed}")
 
     random.seed(seed)

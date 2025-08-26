@@ -1,7 +1,7 @@
 # main.py
 
 import random, numpy as np
-from config import SIM_CONFIG
+from config import SimConfig; config = SimConfig()
 from utils.helpers import clear_screen, print_instance, print_solution_with_utilities, take_care_of_random_seed
 from core import instance_generator
 from core.optimizer import solve_model
@@ -17,14 +17,14 @@ def main():
     print("\n>>> Adaptive Multichain Blockchain Simulation <<<")
 
     # # Step 1: Generate (and print) a random instance
-    if SIM_CONFIG["instance_generator"] == "random":
+    if config.instance_generator == "random":
         instance = instance_generator.generate_random_instance()
-    elif SIM_CONFIG["instance_generator"] == "toy_1":
+    elif config.instance_generator == "toy_1":
         instance = instance_generator.generate_toy_instance_1()
     print_instance(instance)
 
     # Step 2: Build and solve the optimization model 
-    solution, utilities = solve_model(instance, budget=SIM_CONFIG["nevergrad_budget"])
+    solution, utilities = solve_model(instance, budget=config.nevergrad_budget)
 
     # Step 4: Summarize results
     print_solution_with_utilities(solution, utilities)

@@ -3,7 +3,7 @@
 import random
 from typing import Dict, Tuple
 
-from config import SIM_CONFIG
+from config import SimConfig; config = SimConfig()
 
 def _sample_int(low: int, high: int) -> int:
     """
@@ -81,9 +81,9 @@ def generate_toy_instance_1():
 
 
 def generate_random_instance(
-        num_apps = SIM_CONFIG["num_apps"],
-        num_ops = SIM_CONFIG["num_ops"],
-        num_chains = SIM_CONFIG["num_chains"]):
+        num_apps = config.num_apps,
+        num_ops = config.num_ops,
+        num_chains = config.num_chains):
     """
     Generates a random instance with uniformly sampled integral parameters for apps and ops.
 
