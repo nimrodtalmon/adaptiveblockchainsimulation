@@ -34,12 +34,12 @@ def define_problem(instance):
     def evaluate(*args, **kwargs):
         app_assignments = kwargs["app_assignments"]
         op_assignments = kwargs["op_assignments"]
-        return -_evaluate_utilities(app_assignments, op_assignments, instance)
+        return -evaluate_utilities(app_assignments, op_assignments, instance)
 
     return parametrization, evaluate
 
 
-def _evaluate_utilities(app_assignments, op_assignments, instance):
+def evaluate_utilities(app_assignments, op_assignments, instance):
     """
     Computes the utility function to maximize (returned as negative for minimization).
     """

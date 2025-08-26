@@ -9,11 +9,11 @@ from core.optimizer import solve_model
 def main():
     # Clear the screen
     clear_screen()
-    # Take care for random seed
-    take_care_of_random_seed()
 
     # Print hello
     print("\n>>> Adaptive Multichain Blockchain Simulation <<<")
+    # Take care for random seed
+    take_care_of_random_seed()
 
     # # Step 1: Generate (and print) a random instance
     instance = instance_generator.generate_instance(config)

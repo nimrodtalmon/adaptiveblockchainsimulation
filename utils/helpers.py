@@ -15,10 +15,10 @@ def take_care_of_random_seed():
     if config.random_seed == -1:
         # pick a random seed
         seed = random.randint(0, 2**32 - 1)
-        print(f"[DEBUG] Using random seed: {seed}")
+        print(f"Random seed: {seed}")
     else:
         seed = config.random_seed
-        print(f"[DEBUG] Using seed: {seed}")
+        print(f"Random seed: {seed}")
 
     random.seed(seed)
     np.random.seed(seed)
@@ -46,7 +46,7 @@ def print_instance(instance, max_rows=5):
     Pretty-print an instance (apps, ops, chains).
     Limits output for readability.
     """
-    print("\n=== Instance Summary ===")
+    print("\n=== Instance ===")
 
     print(f"Applications ({len(instance['apps'])} total):")
     for i, app in enumerate(instance["apps"][:max_rows]):
@@ -74,14 +74,14 @@ def print_solution_with_utilities(solution, utilities):
     apps = solution["app_assignments"]
     ops = solution["op_assignments"]
 
-    print("\n--- App Assignments ---")
+    print("\nApp Assignments:")
     for a, c in enumerate(apps):
         print(f"  App {a} → Chain {c}" if c != -1 else f"  App {a} → Unassigned")
 
-    print("\n--- Operator Assignments ---")
+    print("\nOperator Assignments:")
     for o, c in enumerate(ops):
         print(f"  Op {o} → Chain {c}" if c != -1 else f"  Op {o} → Unassigned")
 
-    print("\n--- Utilities ---")
+    print("\nUtilities:")
     print(f"  Total (weighted):    {utilities:.3f}")
 
