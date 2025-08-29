@@ -73,6 +73,7 @@ def print_solution_with_utilities(solution, utilities):
 
     apps = solution["app_assignments"]
     ops = solution["op_assignments"]
+    fee2gas_chains = solution["fee2gas_chains"]
 
     print("\nApp Assignments:")
     for a, c in enumerate(apps):
@@ -81,6 +82,10 @@ def print_solution_with_utilities(solution, utilities):
     print("\nOperator Assignments:")
     for o, c in enumerate(ops):
         print(f"  Op {o} → Chain {c}" if c != -1 else f"  Op {o} → Unassigned")
+
+    print("\nChain fee2gas values:")
+    for c, fee in enumerate(fee2gas_chains):
+        print(f"  Chain {c}: fee2gas = {fee:.3f}")
 
     print("\nUtilities:")
     print(f"  Total (weighted):    {utilities:.3f}")

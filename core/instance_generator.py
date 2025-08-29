@@ -53,7 +53,7 @@ def generate_toy_instance_1():
             {"gas": 15, "stake": 6, "fee2gas": 1},   
         ],
         "chains": [0],
-        "lambdas": {"apps": 0.1, "ops": 0.2, "sys": 0.7},
+        "lambdas": {"apps": 0, "ops": 1, "sys": 0},
     }
 
 

@@ -39,12 +39,18 @@ def solve_model(instance, budget=1000, verbose=True):
     best_kwargs = recommendation.kwargs
     best_app_assignment = best_kwargs["app_assignments"]
     best_op_assignment = best_kwargs["op_assignments"]
+    best_fee2gas_chains = best_kwargs["fee2gas_chains"]
 
     # Recompute utilities (positive value this time)
     from core.model_basic import evaluate_utilities
-    score = evaluate_utilities(best_app_assignment, best_op_assignment, instance)
+    score = evaluate_utilities(
+        best_app_assignment, 
+        best_op_assignment, 
+        best_fee2gas_chains, 
+        instance)
     
     return {
         "app_assignments": best_app_assignment,
-        "op_assignments": best_op_assignment
+        "op_assignments": best_op_assignment,
+        "fee2gas_chains": best_fee2gas_chains
     }, score

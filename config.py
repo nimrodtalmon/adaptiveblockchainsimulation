@@ -21,5 +21,5 @@ class SimConfig:
 
     # Nevergrad parameters
     nevergrad_optimizer: Callable[..., Any] = ng.optimizers.NgIohTuned
-    nevergrad_budget: int = 50
+    nevergrad_budget: int = 500
     nevergrad_num_workers: int = 1

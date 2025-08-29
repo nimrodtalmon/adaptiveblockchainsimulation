@@ -24,22 +24,27 @@ def define_problem(instance):
     # Define search space
     app_vars = [ng.p.Choice(list(range(-1, num_chains))) for _ in range(num_apps)]
     op_vars = [ng.p.Choice(list(range(-1, num_chains))) for _ in range(num_ops)]
+    FEE2GAS_MAX = max([a["fee2gas"] for a in instance["apps"]], default=1.0)
+    print('MMMMMMMM:', FEE2GAS_MAX)
+    fee2gas_vars = [ng.p.Scalar(lower=0.0, upper=FEE2GAS_MAX) for _ in range(num_chains)]
 
     parametrization = ng.p.Instrumentation(
         app_assignments=ng.p.Tuple(*app_vars),
-        op_assignments=ng.p.Tuple(*op_vars)
+        op_assignments=ng.p.Tuple(*op_vars),
+        fee2gas_chains=ng.p.Tuple(*fee2gas_vars)
     )
 
     # Define evaluation function
     def evaluate(*args, **kwargs):
         app_assignments = kwargs["app_assignments"]
         op_assignments = kwargs["op_assignments"]
-        return -evaluate_utilities(app_assignments, op_assignments, instance)
+        fee2gas_chains = kwargs["fee2gas_chains"]
+        return -evaluate_utilities(app_assignments, op_assignments, fee2gas_chains, instance)
 
     return parametrization, evaluate
 
 
-def evaluate_utilities(app_assignments, op_assignments, instance):
+def evaluate_utilities(app_assignments, op_assignments, fee2gas_chains, instance):
     """
     Computes the utility function to maximize (returned as negative for minimization).
     """
@@ -65,8 +70,10 @@ def evaluate_utilities(app_assignments, op_assignments, instance):
     demand = {}
     supply = {}
     gas = {}
-    fee2gas_chain = {}
     stake_chain = {}
+
+    # fee2gas per chain (decision variables)
+    fee2gas_chain = {c: float(fee2gas_chains[i]) for i, c in enumerate(chains)}
 
     for c in chains:
         # 1) Demand_c = Σ_{app ∈ apps_on_chain[c]} gas_app
@@ -81,9 +88,6 @@ def evaluate_utilities(app_assignments, op_assignments, instance):
         # 4) Stake_c = Σ_{op ∈ ops_on_chain[c]} stake_op
         stake_chain[c] = sum(ops[o]["stake"] for o in ops_on_chain[c])
 
-        # 5) Fee2gas_c = min_{app ∈ apps_on_chain[c]} fee2gas_app ; if no apps then 0
-        fee2gas_chain[c] = min((apps[a]["fee2gas"] for a in apps_on_chain[c]), default=0.0)
-
     # Compute hard constraints
     fee2gas_violations = 0
     stake_violations = 0
@@ -94,7 +98,18 @@ def evaluate_utilities(app_assignments, op_assignments, instance):
             if ops[o]["fee2gas"] > fee2gas_chain[c]:
                 fee2gas_violations += 1
 
-    # 2) x_{app,c} ⇒ Stake_c ≥ stake_app
+    # 1) max{fee2gas_op | y_op,c=1} ≤ fee2gas_chain[c] ≤ min{fee2gas_app | x_app,c=1}
+    for c in chains:
+        if ops_on_chain[c]:  # lower bound from operators
+            lo = max(ops[o]["fee2gas"] for o in ops_on_chain[c])
+            if fee2gas_chain[c] < lo:
+                fee2gas_violations += 1
+        if apps_on_chain[c]:  # upper bound from apps
+            hi = min(apps[a]["fee2gas"] for a in apps_on_chain[c])
+            if fee2gas_chain[c] > hi:
+                fee2gas_violations += 1
+
+    # 2) stake_c ≥ max{stake_app | x_{app,c} = 1}
     for c in chains:
         for a in apps_on_chain[c]:
             if stake_chain[c] < apps[a]["stake"]:
