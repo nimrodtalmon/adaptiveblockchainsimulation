@@ -4,7 +4,7 @@ import os
 import random
 import numpy as np
 from typing import Dict, Tuple
-from config import SimConfig; config = SimConfig()
+from config import GeneralConfig; general_config = GeneralConfig()
 
 
 def clear_screen():
@@ -12,12 +12,12 @@ def clear_screen():
 
 
 def take_care_of_random_seed():
-    if config.random_seed == -1:
+    if general_config.random_seed == -1:
         # pick a random seed
         seed = random.randint(0, 2**32 - 1)
         print(f"Random seed: {seed}")
     else:
-        seed = config.random_seed
+        seed = general_config.random_seed
         print(f"Random seed: {seed}")
 
     random.seed(seed)

@@ -1,5 +1,5 @@
 # main.py
-from config import GeneralConfig, OneInstanceConfig; general_config = GeneralConfig(); one_instance_config = OneInstanceConfig
+from config import GeneralConfig, ExperimentConfig; general_config = GeneralConfig(); experiment_config = ExperimentConfig()
 import random, numpy as np
 from core import instance_generator
 from utils.helpers import clear_screen, print_instance, print_solution_with_utilities, take_care_of_random_seed
@@ -16,7 +16,8 @@ def main():
     take_care_of_random_seed()
 
     # # Step 1: Generate (and print) a random instance
-    instance = instance_generator.generate_instance(general_config)
+
+    instance = instance_generator.generate_instance(experiment_config)
     print_instance(instance)
 
     # Step 2: Build and solve the optimization model

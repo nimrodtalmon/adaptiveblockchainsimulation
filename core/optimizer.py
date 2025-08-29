@@ -2,7 +2,7 @@
 
 import nevergrad as ng
 from core.model_basic import define_problem
-from config import SimConfig; config = SimConfig()
+from config import GeneralConfig; general_config = GeneralConfig()
 
 
 def solve_model(instance, budget=1000, verbose=True):
@@ -22,15 +22,15 @@ def solve_model(instance, budget=1000, verbose=True):
     parametrization, evaluate = define_problem(instance)
 
     # Set up Nevergrad optimizer
-    optimizer = config.nevergrad_optimizer(
+    optimizer = general_config.nevergrad_optimizer(
         parametrization=parametrization, 
         budget=budget,
-        num_workers=config.nevergrad_num_workers)
+        num_workers=general_config.nevergrad_num_workers)
 
     if verbose:
         print("\n=== Solver ===")
-        print(f"[Nevergrad] {config.nevergrad_optimizer.__name__} | "
-              f"budget={config.nevergrad_budget} | num_workers={config.nevergrad_num_workers}")
+        print(f"[Nevergrad] {general_config.nevergrad_optimizer.__name__} | "
+              f"budget={general_config.nevergrad_budget} | num_workers={general_config.nevergrad_num_workers}")
 
     # Run optimization
     recommendation = optimizer.minimize(evaluate)

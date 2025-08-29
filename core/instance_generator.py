@@ -2,7 +2,7 @@
 import random
 from typing import Dict, Tuple
 from utils.helpers import sample_int, generate_random_lambdas
-from config import SimConfig; config = SimConfig()
+from config import GeneralConfig; general_config = GeneralConfig()
 
 
 def generate_instance(config):
@@ -10,7 +10,7 @@ def generate_instance(config):
     Look up and call the generator function specified by name in config.instance_generator.
     The name must match a zero-arg callable defined in THIS module (core.instance_generator).
     """
-    name = config.instance_generator
+    name = general_config.instance_generator
     if not isinstance(name, str) or not name:
         raise TypeError("config.instance_generator must be a non-empty string")
 
@@ -57,10 +57,10 @@ def generate_toy_instance_1():
     }
 
 
-def generate_random_instance(
-        num_apps = config.num_apps,
-        num_ops = config.num_ops,
-        num_chains = config.num_chains):
+def generate_random_instance_1(
+        num_apps = general_config.num_apps,
+        num_ops = general_config.num_ops,
+        num_chains = general_config.num_chains):
     """
     Generates a random instance with uniformly sampled integral parameters for apps and ops.
 
