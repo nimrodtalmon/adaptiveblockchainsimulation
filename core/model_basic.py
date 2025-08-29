@@ -25,7 +25,6 @@ def define_problem(instance):
     app_vars = [ng.p.Choice(list(range(-1, num_chains))) for _ in range(num_apps)]
     op_vars = [ng.p.Choice(list(range(-1, num_chains))) for _ in range(num_ops)]
     FEE2GAS_MAX = max([a["fee2gas"] for a in instance["apps"]], default=1.0)
-    print('MMMMMMMM:', FEE2GAS_MAX)
     fee2gas_vars = [ng.p.Scalar(lower=0.0, upper=FEE2GAS_MAX) for _ in range(num_chains)]
 
     parametrization = ng.p.Instrumentation(

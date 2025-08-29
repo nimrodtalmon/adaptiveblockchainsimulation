@@ -36,14 +36,14 @@ def generate_toy_instance_1():
     Solution:
       App and op on the chain (stake is fine)
       There is 10 gas on the chain
-      The chain's fee2gas is 2 (this is what the app agrees; if we take min over apps)
+      The chain's fee2gas is 2 (this is what the app agrees; and lambda.ops = 1)
       So the total fee on the chain is 20
        
     Utilities:
       App base util is 10 (gas computed for is 10)
       Op base util is 20 / 6 = 3.333 (fee on chain is 20, only one op on chain, op stake is 6)
       Sys base util is 20 (total network fee)
-      Weighted total = 0.1 * 10 + 0.2 * 3.333 + 0.7 * 20 = 15.667
+      Weighted total = 0 * 10 + 1 * 3.333 + 0 * 20 = 3.333
     """
     return {
         "apps": [
