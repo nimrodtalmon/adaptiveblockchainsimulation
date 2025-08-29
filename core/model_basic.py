@@ -85,22 +85,23 @@ def evaluate_utilities(app_assignments, op_assignments, instance):
         fee2gas_chain[c] = min((apps[a]["fee2gas"] for a in apps_on_chain[c]), default=0.0)
 
     # Compute hard constraints
-    PENALTY = 1e9
-    violations = 0
+    fee2gas_violations = 0
+    stake_violations = 0
 
     # 1) y_{op,c} ⇒ fee2gas_op ≤ Fee2gas_c
     for c in chains:
         for o in ops_on_chain[c]:
             if ops[o]["fee2gas"] > fee2gas_chain[c]:
-                violations += 1
+                fee2gas_violations += 1
 
     # 2) x_{app,c} ⇒ Stake_c ≥ stake_app
     for c in chains:
         for a in apps_on_chain[c]:
             if stake_chain[c] < apps[a]["stake"]:
-                violations += 1
+                stake_violations += 1
 
     # Compute utilities
+    # app util
     app_util = []
     for a, c in enumerate(app_assignments):
         if c == -1 or demand[c] == 0:
@@ -109,6 +110,7 @@ def evaluate_utilities(app_assignments, op_assignments, instance):
             share = gas[c] / demand[c]
             app_util.append(apps[a]["gas"] * share)
 
+    # op util
     op_util = []
     for o, c in enumerate(op_assignments):
         if c == -1 or not ops_on_chain[c]:
@@ -117,26 +119,15 @@ def evaluate_utilities(app_assignments, op_assignments, instance):
             share = 1 / len(ops_on_chain[c])
             fee = fee2gas_chain[c] * gas[c]
             op_util.append((fee * share) / ops[o]["stake"])
-            # print('JAJA:', fee, share, ops[o]["stake"], op_util)
-            
 
+    # sys util
     sys_util = sum(fee2gas_chain[c] * gas[c] for c in chains)
 
+    # total util
     total_util = (lambdas["apps"] * sum(app_util) +
              lambdas["ops"] * sum(op_util) +
              lambdas["sys"] * sys_util)
 
-    # if True:
-    #     print("=== DEBUG utility computation ===")
-    #     print(f"App utils: {app_util}  -> sum={sum(app_util)}  "
-    #         f"weighted={lambdas['apps']}*{sum(app_util)}={lambdas['apps']*sum(app_util):.4f}")
-    #     print(f"Op utils:  {op_util}  -> sum={sum(op_util)}  "
-    #         f"weighted={lambdas['ops']}*{sum(op_util)}={lambdas['ops']*sum(op_util):.4f}")
-    #     print(f"Sys util: {sys_util} "
-    #         f"weighted={lambdas['sys']}*{sys_util}={lambdas['sys']*sys_util:.4f}")
-    #     print(f"Penalty: {PENALTY}*{violations} = {PENALTY*violations}")
-    #     print(f"Total utility = {total_util:.4f} - penalty = "
-    #         f"{total_util - PENALTY*violations:.4f}")
-    #     print("================================")
-
-    return total_util - PENALTY * violations
+    # score
+    PENALTY = 1e15
+    return total_util - PENALTY * (fee2gas_violations + stake_violations) 

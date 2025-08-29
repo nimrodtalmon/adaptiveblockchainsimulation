@@ -19,7 +19,7 @@ def main():
     instance = instance_generator.generate_instance(config)
     print_instance(instance)
 
-    # Step 2: Build and solve the optimization model 
+    # Step 2: Build and solve the optimization model
     solution, utilities = solve_model(instance, budget=config.nevergrad_budget)
 
     # Step 4: Summarize results
