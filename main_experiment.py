@@ -16,15 +16,16 @@ def main():
     take_care_of_random_seed()
 
     # # Step 1: Generate (and print) a random instance
+    for i in range(experiment_config.repetitions):
+        print("\n>>> INSTANCE %d\n\n"%i)
+        instance = instance_generator.generate_instance(experiment_config)
+        print_instance(instance)
 
-    instance = instance_generator.generate_instance(experiment_config)
-    print_instance(instance)
+        # Step 2: Build and solve the optimization model
+        solution, utilities = solve_model(instance, budget=general_config.nevergrad_budget)
 
-    # Step 2: Build and solve the optimization model
-    solution, utilities = solve_model(instance, budget=general_config.nevergrad_budget)
-
-    # Step 4: Summarize results
-    print_solution_with_utilities(solution, utilities)
+        # Step 3: Summarize results
+        print_solution_with_utilities(solution, utilities)
 
 if __name__ == "__main__":
     main()
