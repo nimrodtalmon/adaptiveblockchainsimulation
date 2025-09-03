@@ -10,7 +10,7 @@ class GeneralConfig:
 
     # Nevergrad parameters
     nevergrad_optimizer: Callable[..., Any] = ng.optimizers.NgIohTuned
-    nevergrad_budget: int = 50
+    nevergrad_budget: int = 5000
     nevergrad_num_workers: int = 1
 
     # Instance parameters

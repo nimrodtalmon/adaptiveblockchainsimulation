@@ -3,6 +3,7 @@
 import nevergrad as ng
 from core.model_basic import define_problem
 from config import GeneralConfig; general_config = GeneralConfig()
+import matplotlib.pyplot as plt
 
 
 def solve_model(instance, verbose=True):
@@ -32,13 +33,42 @@ def solve_model(instance, verbose=True):
         print(f"[Nevergrad] {general_config.nevergrad_optimizer.__name__} | "
               f"budget={general_config.nevergrad_budget} | num_workers={general_config.nevergrad_num_workers}")
 
+    
+    # Tracking
+    loss_hist = []
+    totvio_hist = []
+
     # Run optimization
-    for _ in range(opt.budget):
+    for it in range(opt.budget):
+        # ask
         cand = opt.ask()
+        # get value and vlist (and then total_vio)
         value = evaluate(**cand.kwargs)
-        violations = constraints(**cand.kwargs)
-        opt.tell(cand, value, violations) 
+        vlist = constraints(**cand.kwargs)
+        total_vio = float(sum(vlist)) 
+
+        # Log
+        loss_hist.append(float(value))
+        totvio_hist.append(total_vio)
+
+        # Print this iteration
+        # print(f"[{it+1:04d}] loss={value:.6f} | #constraints={len(vlist)} | total_vio={total_vio:.6f}")
+
+        # tell
+        opt.tell(cand, value, vlist)
+    # Get recommendation
     recommendation = opt.provide_recommendation()
+
+    # === Combined plot ===
+    plt.figure()
+    plt.plot(loss_hist, label="Loss")
+    plt.plot(totvio_hist, label="Total violation")
+    plt.xlabel("Iteration")
+    plt.ylabel("Value")
+    plt.title("Loss & Constraint Violation per Iteration")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
     # Extract best assignment
     best_kwargs = recommendation.kwargs
