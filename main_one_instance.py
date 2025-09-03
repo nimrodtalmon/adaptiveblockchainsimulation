@@ -20,7 +20,7 @@ def main():
     print_instance(instance)
 
     # Step 2: Build and solve the optimization model
-    solution, utilities = solve_model(instance, budget=general_config.nevergrad_budget)
+    solution, utilities = solve_model(instance)
 
     # Step 4: Summarize results
     print_solution_with_utilities(solution, utilities)

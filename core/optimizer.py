@@ -5,7 +5,7 @@ from core.model_basic import define_problem
 from config import GeneralConfig; general_config = GeneralConfig()
 
 
-def solve_model(instance, budget=1000, verbose=True):
+def solve_model(instance, verbose=True):
     """
     Solves the model defined in model_basic.py using Nevergrad (NGOpt solver).
     
@@ -19,12 +19,12 @@ def solve_model(instance, budget=1000, verbose=True):
         score: total utility value
     """
     # Build search space and objective
-    parametrization, evaluate = define_problem(instance)
+    parametrization, evaluate, constraints = define_problem(instance)
 
     # Set up Nevergrad optimizer
-    optimizer = general_config.nevergrad_optimizer(
+    opt = general_config.nevergrad_optimizer(
         parametrization=parametrization, 
-        budget=budget,
+        budget=general_config.nevergrad_budget,
         num_workers=general_config.nevergrad_num_workers)
 
     if verbose:
@@ -33,7 +33,13 @@ def solve_model(instance, budget=1000, verbose=True):
               f"budget={general_config.nevergrad_budget} | num_workers={general_config.nevergrad_num_workers}")
 
     # Run optimization
-    recommendation = optimizer.minimize(evaluate)
+    # recommendation = optimizer.minimize(evaluate, constraints)
+    for _ in range(opt.budget):
+        cand = opt.ask()
+        value = evaluate(**cand.kwargs)
+        violations = constraints(**cand.kwargs)
+        opt.tell(cand, value, violations) 
+    recommendation = opt.provide_recommendation()
 
     # Extract best assignment
     best_kwargs = recommendation.kwargs
