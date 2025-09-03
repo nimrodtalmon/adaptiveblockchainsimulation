@@ -33,7 +33,6 @@ def solve_model(instance, verbose=True):
               f"budget={general_config.nevergrad_budget} | num_workers={general_config.nevergrad_num_workers}")
 
     # Run optimization
-    # recommendation = optimizer.minimize(evaluate, constraints)
     for _ in range(opt.budget):
         cand = opt.ask()
         value = evaluate(**cand.kwargs)
@@ -48,8 +47,13 @@ def solve_model(instance, verbose=True):
     best_fee2gas_chains = best_kwargs["fee2gas_chains"]
 
     # Recompute utilities (positive value this time)
-    from core.model_basic import evaluate_utilities
+    from core.model_basic import evaluate_utilities, evaluate_constraints
     score = evaluate_utilities(
+        best_app_assignment, 
+        best_op_assignment, 
+        best_fee2gas_chains, 
+        instance)
+    constraints = evaluate_constraints(
         best_app_assignment, 
         best_op_assignment, 
         best_fee2gas_chains, 
@@ -59,4 +63,4 @@ def solve_model(instance, verbose=True):
         "app_assignments": best_app_assignment,
         "op_assignments": best_op_assignment,
         "fee2gas_chains": best_fee2gas_chains
-    }, score
+    }, score, constraints

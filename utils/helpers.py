@@ -65,7 +65,7 @@ def print_instance(instance, max_rows=5):
         print(f"  ... ({len(instance['chains']) - max_rows} more)")
 
 
-def print_solution_with_utilities(solution, utilities):
+def print_solution_with_utilities_and_constraints(solution, utilities, constraints):
     """
     Pretty-print a solution with utility breakdown.
     """
@@ -90,3 +90,5 @@ def print_solution_with_utilities(solution, utilities):
     print("\nUtilities:")
     print(f"  Total (weighted):    {utilities:.3f}")
 
+    print("\nConstraints:")
+    print(f"  Violations: {constraints}")

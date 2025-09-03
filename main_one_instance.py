@@ -2,7 +2,7 @@
 from config import GeneralConfig, OneInstanceConfig; general_config = GeneralConfig(); one_instance_config = OneInstanceConfig
 import random, numpy as np
 from core import instance_generator
-from utils.helpers import clear_screen, print_instance, print_solution_with_utilities, take_care_of_random_seed
+from utils.helpers import clear_screen, print_instance, print_solution_with_utilities_and_constraints, take_care_of_random_seed
 from core.optimizer import solve_model
 
 
@@ -20,10 +20,10 @@ def main():
     print_instance(instance)
 
     # Step 2: Build and solve the optimization model
-    solution, utilities = solve_model(instance)
+    solution, utilities, constraints = solve_model(instance)
 
     # Step 4: Summarize results
-    print_solution_with_utilities(solution, utilities)
+    print_solution_with_utilities_and_constraints(solution, utilities, constraints)
 
 if __name__ == "__main__":
     main()
