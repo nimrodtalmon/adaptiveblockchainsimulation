@@ -19,7 +19,7 @@ def main():
     for i in range(experiment_config.repetitions):
         print("\n>>> INSTANCE %d\n\n"%i)
         instance = instance_generator.generate_instance(experiment_config)
-        print_instance(instance)
+        print_instance(instance)d
 
         # Step 2: Build and solve the optimization model
         solution, utilities = solve_model(instance)
