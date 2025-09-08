@@ -3,7 +3,6 @@
 import nevergrad as ng
 from core.model_basic import define_problem
 from config import GeneralConfig; general_config = GeneralConfig()
-import matplotlib.pyplot as plt
 
 
 def solve_model(instance, verbose=True):
@@ -59,17 +58,6 @@ def solve_model(instance, verbose=True):
     # Get recommendation
     recommendation = opt.provide_recommendation()
 
-    # === Combined plot ===
-    plt.figure()
-    plt.plot(loss_hist, label="Loss")
-    plt.plot(totvio_hist, label="Total violation")
-    plt.xlabel("Iteration")
-    plt.ylabel("Value")
-    plt.title("Loss & Constraint Violation per Iteration")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
     # Extract best assignment
     best_kwargs = recommendation.kwargs
     best_app_assignment = best_kwargs["app_assignments"]
@@ -93,4 +81,4 @@ def solve_model(instance, verbose=True):
         "app_assignments": best_app_assignment,
         "op_assignments": best_op_assignment,
         "fee2gas_chains": best_fee2gas_chains
-    }, score, constraints
+    }, score, constraints, loss_hist, totvio_hist

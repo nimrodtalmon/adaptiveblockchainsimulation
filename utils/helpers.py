@@ -4,6 +4,7 @@ import os
 import random
 import numpy as np
 from typing import Dict, Tuple
+import matplotlib.pyplot as plt
 from config import GeneralConfig; general_config = GeneralConfig()
 
 
@@ -64,6 +65,18 @@ def print_instance(instance, max_rows=5):
     if len(instance["chains"]) > max_rows:
         print(f"  ... ({len(instance['chains']) - max_rows} more)")
 
+
+def plot_loss_and_violations_per_iteration(loss_hist, totvio_hist):
+    # === Combined plot ===
+    plt.figure()
+    plt.plot(loss_hist, label="Loss")
+    plt.plot(totvio_hist, label="Total violation")
+    plt.xlabel("Iteration")
+    plt.ylabel("Value")
+    plt.title("Loss & Constraint Violation per Iteration")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 def print_solution_with_utilities_and_constraints(solution, utilities, constraints):
     """
