@@ -172,31 +172,31 @@ def evaluate_constraints(app_assignments, op_assignments, fee2gas_chains, instan
         stake_chain[c] = sum(ops[o]["stake"] for o in ops_on_chain[c])
 
     # Compute hard constraints
-    fee2gas_violations = 0
-    stake_violations = 0
+    fee2gas_violations = []
+    stake_violations = []
 
     # 1) y_{op,c} ⇒ fee2gas_op ≤ Fee2gas_c
     for c in chains:
         for o in ops_on_chain[c]:
             if ops[o]["fee2gas"] > fee2gas_chain[c]:
-                fee2gas_violations += 1
+                fee2gas_violations.append(ops[o]["fee2gas"] - fee2gas_chain[c])
 
     # 1) max{fee2gas_op | y_op,c=1} ≤ fee2gas_chain[c] ≤ min{fee2gas_app | x_app,c=1}
     for c in chains:
         if ops_on_chain[c]:  # lower bound from operators
             lo = max(ops[o]["fee2gas"] for o in ops_on_chain[c])
             if fee2gas_chain[c] < lo:
-                fee2gas_violations += 1
+                fee2gas_violations.append(lo - fee2gas_chain[c])
         if apps_on_chain[c]:  # upper bound from apps
             hi = min(apps[a]["fee2gas"] for a in apps_on_chain[c])
             if fee2gas_chain[c] > hi:
-                fee2gas_violations += 1
+                fee2gas_violations.append(fee2gas_chain[c] - hi)
 
     # 2) stake_c ≥ max{stake_app | x_{app,c} = 1}
     for c in chains:
         for a in apps_on_chain[c]:
             if stake_chain[c] < apps[a]["stake"]:
-                stake_violations += 1
+                stake_violations.append(apps[a]["stake"] - stake_chain[c])
 
     # score
-    return [fee2gas_violations, stake_violations] 
+    return fee2gas_violations + stake_violations 

@@ -6,11 +6,12 @@ import nevergrad as ng
 @dataclass
 class GeneralConfig:
     # Randomness
-    random_seed: int = 42
+    random_seed: int = -1
 
     # Nevergrad parameters
     nevergrad_optimizer: Callable[..., Any] = ng.optimizers.NgIohTuned
-    nevergrad_budget: int = 10000
+    # nevergrad_optimizer: Callable[..., Any] = ng.optimizers.CMA
+    nevergrad_budget: int = 100
     nevergrad_num_workers: int = 1
 
     # Instance parameters
