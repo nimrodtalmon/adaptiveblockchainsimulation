@@ -181,7 +181,7 @@ def evaluate_constraints(app_assignments, op_assignments, fee2gas_chains, instan
             if ops[o]["fee2gas"] > fee2gas_chain[c]:
                 fee2gas_violations.append(ops[o]["fee2gas"] - fee2gas_chain[c])
 
-    # 1) max{fee2gas_op | y_op,c=1} ≤ fee2gas_chain[c] ≤ min{fee2gas_app | x_app,c=1}
+    # 1) max{fee2gas_op | y_op,c=1} ≤ fee2gas _chain[c] ≤ min{fee2gas_app | x_app,c=1}
     for c in chains:
         if ops_on_chain[c]:  # lower bound from operators
             lo = max(ops[o]["fee2gas"] for o in ops_on_chain[c])
