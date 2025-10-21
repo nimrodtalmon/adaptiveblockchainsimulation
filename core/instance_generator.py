@@ -5,7 +5,34 @@ from utils.helpers import sample_int, generate_random_lambdas
 from config import GeneralConfig; general_config = GeneralConfig()
 
 
-def generate_toy_instance_0():
+def generate_validation_example_1():
+    """
+    Instance (1 chain; 1 app; 1 operator):
+      a: gas 100; stake 50; price 10
+      o: gas 100; stake 50; price 10
+    
+    Solution:
+      Qmax = 1000
+      Solution {(a, o, 10)}
+      Ua = 1
+      Uo = 0.02
+      Us = 1
+      With lambdas 0.5, 0.3, 0.2:
+        U = 0.5 * 1 + 0.3 * 0.02 + 0.2 * 1 = 0.706
+    """
+    return {
+        "apps": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "ops": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "chains": [0],
+        "lambdas": {"apps": 0.5, "ops": 0.3, "sys": 0.2},
+    }
+
+
+def generate_validation_example_2():
     """
     Instance (1 chain; 1 app; 1 operator):
       a: gas 100; stake 50; price 10
