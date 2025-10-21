@@ -39,8 +39,8 @@ def solve_model(instance, verbose=True):
           parametrization=parametrization, 
           budget=general_config.nevergrad_budget,
           num_workers=general_config.nevergrad_num_workers)
-    parametrization.random_state.seed(hlp.take_care_of_random_seed()) #Haim
-    opt._rng.seed(hlp.take_care_of_random_seed()) #Haim
+    parametrization.random_state.seed(hlp.take_care_of_random_seed_for_opt()) #Haim
+    opt._rng.seed(hlp.take_care_of_random_seed_for_opt()) #Haim
    
    
     if False:
@@ -157,18 +157,18 @@ def solve_model(instance, verbose=True):
     #       stats.uniform_expected_unique(unique_states, general_config.nevergrad_budget))
 
     target_coverage = 0.95
-    print(f"Budget estimated needed to hit {target_coverage} of all effective unique states", 
-          stats.uniform_T_for_coverage(meff, target_coverage))
+    # print(f"Budget estimated needed to hit {target_coverage} of all effective unique states", 
+        #   stats.uniform_T_for_coverage(meff, target_coverage))
     budget = general_config.nevergrad_budget
-    print(f"The expected number of effective unique states given the curent experimentation with  a budget of {budget} ~", 
-          stats.expected_unique(meff, budget))
+    # print(f"The expected number of effective unique states given the curent experimentation with  a budget of {budget} ~", 
+    #       stats.expected_unique(meff, budget))
     # Print text histogram
-    print("{canonical state frequency: canonical key count):")
+    # print("{canonical state frequency: canonical key count):")
     from collections import Counter
     freq_counts = dict(Counter(stats.freq.values()))
     sorted_freq_counts = dict(sorted(freq_counts.items(), key=lambda x: x[1]))
-    for key, value in sorted_freq_counts.items():
-        print(f"{key}: {'█' * value}")
+    # for key, value in sorted_freq_counts.items():
+    #     print(f"{key}: {'█' * value}")
 
     # End of stat added by Haim    
 

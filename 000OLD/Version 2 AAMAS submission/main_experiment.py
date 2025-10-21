@@ -1,5 +1,5 @@
 # main.py
-# from config import GeneralConfig, ExperimentConfig; general_config = GeneralConfig(); experiment_config = ExperimentConfig()
+from config import GeneralConfig, ExperimentConfig; general_config = GeneralConfig(); experiment_config = ExperimentConfig()
 import random, numpy as np
 from core import instance_generator
 from utils.helpers import clear_screen, print_instance, print_solution_with_utilities_and_constraints, take_care_of_random_seed
@@ -9,14 +9,12 @@ from core.optimizer import solve_model
 import nevergrad as ng
 
 
-
 def main():
     # Clear the screen
     clear_screen()
 
     print(ng.__version__)
 
-    """ # TMP
     # Print hello
     print("\n>>> Adaptive Multichain Blockchain Simulation <<<")
     # Take care for random seed
@@ -32,9 +30,7 @@ def main():
         solution, utilities, constraints = solve_model(instance)
 
         # Step 3: Summarize results
-        print_solution_with_utilities_and_constraints(solution, utilities, constraints, instance) # Changed by Haim
-
-    """        # TMP
+        print_solution_with_utilities_and_constraints(solution, utilities, constraints, instance)
 
 if __name__ == "__main__":
     main()
