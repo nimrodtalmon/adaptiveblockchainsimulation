@@ -1,0 +1,234 @@
+import math
+import numpy as np
+import nevergrad as ng
+from nevergrad.optimization.base import Optimizer
+from nevergrad.optimization import optimizerlib
+
+
+# ---------------- Penalty formula ----------------
+def ng_constraint_penalty(loss, violations, num_tell,
+                          maximize=False,
+                          penalty_style=None,
+                          stationary=False):
+    """
+    NG-style penalty with 6 constants (a,b,c,d,e,f).
+    Default minimization:
+        base = a + max(loss, 0)
+    Maximization (negative objectives):
+        base = a - min(loss, 0)   # equivalent to a + |loss| if loss < 0
+    """
+    if violations is None:
+        violations = []
+    a, b, c, d, e, f = penalty_style or (1e5, 1.0, 0.5, 1.0, 0.5, 1.0)  # TODO: get actual default from the function in helpers.py
+
+    v = np.asarray(list(violations), dtype=float)
+    v = np.maximum(v, 0.0)  # clamp negatives to 0
+    sum_v_c = float(np.sum(v ** c))
+
+    # Conditional formula: depends on minimization vs maximization
+    if not maximize:
+        base = a + max(float(loss), 0.0)     # NG default (minimization)
+    else:
+        base = a - min(float(loss), 0.0)     # symmetric for maximization
+
+    time_factor = 1.0 if stationary else (f + float(num_tell)) ** e
+    scale = b * (sum_v_c ** d) if sum_v_c > 0.0 else 0.0
+
+    violation = float(base * time_factor * scale)
+    return float(loss + violation), violation
+
+
+# ---------------- Optimizer implementation ----------------
+class _AdaptivePortfolioOptimizer(Optimizer):
+    """
+    Portfolio of OnePlusOne variants (standard, gaussian, cauchy) with UCB1 selection.
+    Strict __init__: only accepts defined parameters.
+    """
+
+    def __init__(self, parametrization, budget=None, num_workers=1,
+                 penalty_style=None, stationary_penalty=False, maximize=True):
+        # Strict: only known args are accepted
+        super().__init__(parametrization, budget=budget, num_workers=num_workers)
+
+        self.sub_factories = [
+            optimizerlib.ParametrizedOnePlusOne(mutation="standard"),
+            optimizerlib.ParametrizedOnePlusOne(mutation="gaussian"),
+            optimizerlib.ParametrizedOnePlusOne(mutation="cauchy"),
+        ]
+        self.sub_opts = [
+            f(parametrization, budget=None, num_workers=num_workers)
+            for f in self.sub_factories
+        ]
+
+        self.loss_history = [[] for _ in self.sub_opts]
+        self.step_log = []  # (raw_loss, penalty, eff_loss, violations, idx)
+        self.total_steps = 0
+        self.max_steps = int(budget) if budget is not None else float("inf")
+
+        # Settings
+        self.penalty_style = penalty_style
+        self.stationary_penalty = stationary_penalty
+        self.maximize = maximize
+
+    # ----- UCB1 selection -----
+    def _select_optimizer_index(self):
+        T = max(1, self.total_steps)
+        for i, hist in enumerate(self.loss_history):
+            if not hist:
+                return i  # try each at least once
+        scores = []
+        for hist in self.loss_history:
+            mean_eff = sum(h[2] for h in hist) / len(hist)
+            bonus = (2.0 * math.log(T + 1) / len(hist)) ** 0.5
+            scores.append(-mean_eff + bonus)  # smaller eff_loss is better
+        return max(range(len(scores)), key=scores.__getitem__)
+
+    # ----- ask/tell loop -----
+
+
+    # ---------------------------------------------------------
+    # Ask: single or batch, with budget guard
+    # ---------------------------------------------------------
+    def _internal_ask_candidate(self, n=1):
+        # Budget guard
+        if self.total_steps >= self.max_steps:
+            raise RuntimeError("Budget exhausted")
+
+        cands = []
+        for _ in range(n):
+            idx = self._select_optimizer_index()
+            cand = self.sub_opts[idx].ask()
+            cand._from_portfolio_idx = idx
+            cands.append(cand)
+        return cands if n > 1 else cands[0]
+
+    # ---------------------------------------------------------
+    # Tell: single candidate
+    # ---------------------------------------------------------
+    def _internal_tell_candidate(self, candidate, value):
+        idx = getattr(candidate, "_from_portfolio_idx", None)
+        if idx is None:
+            return
+
+        # Normalize input
+        if isinstance(value, tuple) and len(value) == 2:
+            raw_loss, violations = value
+        else:
+            raw_loss, violations = float(value), ()
+
+        # Compute effective loss with full penalty style
+        eff_loss, penalty = ng_constraint_penalty(
+            raw_loss, violations, self._num_tell,
+            maximize=self.maximize,
+            penalty_style=self.penalty_style,
+            stationary=self.stationary_penalty,
+        )
+
+        # Send scalar eff_loss to sub-optimizer
+        self.sub_opts[idx].tell(candidate, eff_loss)
+
+        # Update histories
+        self.loss_history[idx].append((float(raw_loss), tuple(violations), float(eff_loss)))
+        self.step_log.append((float(raw_loss), penalty, float(eff_loss), tuple(violations), idx))
+        self.total_steps += 1
+
+    # ---------------------------------------------------------
+    # Batch tell: safe wrapper around public tell()
+    # ---------------------------------------------------------
+    def tell_batch(self, cand_values):
+        """Tell with a list of (cand, value) or (cand, loss, violations)."""
+        for entry in cand_values:
+            if isinstance(entry, tuple) and len(entry) == 3:
+                cand, loss, violations = entry
+                self.tell(cand, loss, violations)
+            else:
+                cand, value = entry
+                self.tell(cand, value)    
+
+    def _internal_provide_recommendation(self):
+        best_cand, best_eff = None, float("inf")
+        for opt in self.sub_opts:
+            rec = opt.recommend()
+            if rec is None:
+                continue
+            eff = getattr(rec, "loss", float("inf"))
+            if eff < best_eff:
+                best_eff, best_cand = eff, rec
+        return best_cand
+
+    # ----- Diagnostics -----
+    def get_diagnostics(self):
+        """Full per-step log."""
+        return list(self.step_log)
+
+    def summarize_diagnostics(self):
+        """Return summary stats from step_log."""
+        if not self.step_log:
+            return {}
+        penalties = [p for _, p, _, _, _ in self.step_log]
+        eff_losses = [e for _, _, e, _, _ in self.step_log]
+        violations = [v for _, _, _, v, _ in self.step_log if any(v)]
+        by_arm = {}
+        for raw, pen, eff, viols, idx in self.step_log:
+            by_arm.setdefault(idx, []).append(eff)
+        return {
+            "steps": len(self.step_log),
+            "avg_penalty": float(np.mean(penalties)),
+            "penalty_fraction": float(np.mean([p/e if e!=0 else 0 for (_,p,e,_,_) in self.step_log])),
+            "violations_rate": len(violations)/len(self.step_log),
+            "best_eff_loss": float(np.min(eff_losses)),
+            "per_arm_avg_eff": {idx: float(np.mean(vals)) for idx, vals in by_arm.items()}
+        }
+
+
+# ---------------- Factory wrapper ----------------
+class MyAdaptiveDiscretePortfolio(optimizerlib.ParametrizedOptimizer):
+    def __init__(self, penalty_style=None, stationary_penalty=False, maximize=False):
+        super().__init__(_AdaptivePortfolioOptimizer)
+        self._parameters = {
+            "penalty_style": penalty_style,
+            "stationary_penalty": stationary_penalty,
+            "maximize": maximize,
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

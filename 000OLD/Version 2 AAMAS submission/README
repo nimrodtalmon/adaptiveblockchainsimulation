@@ -1,0 +1,11 @@
+README
+
+So :)
+
+steadystate
++ main_one_instance (can get several --runs) populate steadystate.txt
++ then, showsteadystate.py generates png
+
+simplex
++ main_simplex.py (can get several --runs) populate simplex.txt
++ then, create_governancecontrolplot.py generates png
