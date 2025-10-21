@@ -92,11 +92,11 @@ def print_solution_with_utilities_and_constraints(solution, utilities, constrain
         print(f"  Op {o} → Chain {c}" if c != -1 else f"  Op {o} → Unassigned")
 
     print("\nChain gas prices:")
-    # for c, fee in enumerate(fee2gas_chains):
-    #    print(f"  Chain {c}: fee2gas = {fee:.3f}")
-    fee2gas_chain = get_fee2gas_solution_chain(solution, instance)
-    for i, (c, fee) in enumerate(fee2gas_chain.items()):
-        print(f"  Chain {c}: price = {fee:.3f}")
+    for c, fee in enumerate(fee2gas_chains):
+       print(f"  Chain {c}: price = {fee:.3f}")
+    # fee2gas_chain = get_fee2gas_solution_chain(solution, instance)
+    # for i, (c, fee) in enumerate(fee2gas_chain.items()):
+    #     print(f"  Chain {c}: price = {fee:.3f}")
     
 
     print("\nUtilities:")
@@ -106,46 +106,45 @@ def print_solution_with_utilities_and_constraints(solution, utilities, constrain
     print(f"  Violations: {constraints}")
 
 
+# def get_fee2gas_solution_chain(solution, instance):
+#     # Definition of entities
+#     apps = instance["apps"]
+#     ops = instance["ops"]
+#     chains = instance["chains"]
 
-def get_fee2gas_solution_chain(solution, instance):
-    # Definition of entities
-    apps = instance["apps"]
-    ops = instance["ops"]
-    chains = instance["chains"]
+#     # Find out apps/ops on each chain
+#     app_assignments = solution["app_assignments"]
+#     op_assignments = solution["op_assignments"]
 
-    # Find out apps/ops on each chain
-    app_assignments = solution["app_assignments"]
-    op_assignments = solution["op_assignments"]
+#     apps_on_chain = {c: [] for c in chains}
+#     ops_on_chain = {c: [] for c in chains}
 
-    apps_on_chain = {c: [] for c in chains}
-    ops_on_chain = {c: [] for c in chains}
+#     for a, c in enumerate(app_assignments):
+#         if c != -1:
+#              apps_on_chain[c].append(a)
 
-    for a, c in enumerate(app_assignments):
-        if c != -1:
-             apps_on_chain[c].append(a)
+#     for o, c in enumerate(op_assignments):
+#         if c != -1:
+#             ops_on_chain[c].append(o)
 
-    for o, c in enumerate(op_assignments):
-        if c != -1:
-            ops_on_chain[c].append(o)
-
-    fee2gas_chain = get_fee2gas_chain(chains, ops, apps, apps_on_chain, ops_on_chain) #Haim-tmp
-    return fee2gas_chain
+#     fee2gas_chain = get_fee2gas_chain(chains, ops, apps, apps_on_chain, ops_on_chain) #Haim-tmp
+#     return fee2gas_chain
 
 
-def get_fee2gas_chain(chains, ops, apps, apps_on_chain, ops_on_chain):
-    lo = []
-    hi = []
-    for c in chains:
-        if apps_on_chain[c]:
-            lo.append (min(apps[a]["price"] for a in apps_on_chain[c]))
-        else:
-            lo.append(0.0)
-        if ops_on_chain[c]:
-            hi.append(max(ops[o]["price"] for o in ops_on_chain[c]))
-        else:
-           hi.append(0.0) 
-    fee2gas_chain = {c: lo[i]+(hi[i]-lo[i])/2 if hi[i] > 0 and lo[i] > 0 else 0.0 for i, c in enumerate(chains)}
-    return fee2gas_chain
+# # def get_fee2gas_chain(chains, ops, apps, apps_on_chain, ops_on_chain):
+#     lo = []
+#     hi = []
+#     for c in chains:
+#         if apps_on_chain[c]:
+#             lo.append (min(apps[a]["price"] for a in apps_on_chain[c]))
+#         else:
+#             lo.append(0.0)
+#         if ops_on_chain[c]:
+#             hi.append(max(ops[o]["price"] for o in ops_on_chain[c]))
+#         else:
+#            hi.append(0.0) 
+#     fee2gas_chain = {c: lo[i]+(hi[i]-lo[i])/2 if hi[i] > 0 and lo[i] > 0 else 0.0 for i, c in enumerate(chains)}
+#     return fee2gas_chain
 
 
 def print_utility_improvement (budget, loss_hist, totvio_hist):

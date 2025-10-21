@@ -19,13 +19,14 @@ def main():
     np.random.seed(seed)
 
     repetitions = 1
+    size = 100
 
     start_time = time.time()
 
     # # Step 1: Generate (and print) a random instance
     for i in range(repetitions):
         print("\n>>> INSTANCE %d\n\n"%i)
-        instance = instance_generator.generate_validation_example_1()
+        instance = instance_generator.generate_timing_example_1(size)
         print_instance(instance)
 
         # Step 2: Build and solve the optimization model
@@ -36,6 +37,7 @@ def main():
 
     elapsed = time.time() - start_time
     print(f"\nIterations (budget): {general_config.nevergrad_budget}")
+    print(f"\nSize: {size}")
     print(f"Total time: {elapsed:.3f} seconds")
 
 if __name__ == "__main__":
