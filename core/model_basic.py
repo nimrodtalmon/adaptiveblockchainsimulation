@@ -193,8 +193,13 @@ def evaluate_utilities(app_assignments, op_assignments, fee2gas_chains, instance
         if c == -1 or demand[c] == 0:
             app_util.append(0)
         else:
-            share = gas[c] / demand[c]
-            app_util.append(share) # note that it is already normalized
+            # this is with the new term for penalty of price for apps; and normalizing back to [0, 1]
+            price_settled_in_chain = fee2gas_chain[c]
+            price_declared_by_app = apps[a]["price"]
+            penalty_for_price = price_settled_in_chain / price_declared_by_app
+            utilization = gas[c] / demand[c]
+            this_app_util = 0.1 + 0.9 * utilization - (0.1 * penalty_for_price)
+            app_util.append(this_app_util) # note that it is already normalized
 
     # op util
     op_util = []
