@@ -19,8 +19,14 @@ def main():
 
     # List of instance generator functions to run
     instance_generators = [
-        ("Validation Example 1", instance_generator.generate_validation_example_1),
-        ("Validation Example 2", instance_generator.generate_validation_example_2)
+        # ("Validation Example 1", instance_generator.generate_validation_example_1),
+        # ("Validation Example 2", instance_generator.generate_validation_example_2),
+        # ("Validation Example 3 app", instance_generator.generate_validation_example_3_app),
+        # ("Validation Example 3 op", instance_generator.generate_validation_example_3_op),
+        # ("Validation Example 4 app", instance_generator.generate_validation_example_4_app),
+        # ("Validation Example 4 sys", instance_generator.generate_validation_example_4_sys)
+        ("Validation Example 5 op", instance_generator.generate_validation_example_5_op),
+        ("Validation Example 5 sys", instance_generator.generate_validation_example_5_sys)
     ]
 
     # Run each instance
@@ -36,7 +42,7 @@ def main():
 
         # Print results
         print(f"\nFinal Score for {name}: {score[0]:.6f}")
-        # print_solution_with_utilities_and_constraints(solution, solution["utilities"], constraints, instance)
+        print_solution_with_utilities_and_constraints(solution, solution["utilities"], constraints, instance)
         print("\n" + "="*50)
 
 if __name__ == "__main__":

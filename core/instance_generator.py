@@ -59,6 +59,107 @@ def generate_validation_example_2():
     }
 
 
+def generate_validation_example_3_app():
+    """
+    VE3 (see overleaf)
+    """
+    return {
+        "apps": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "ops": [
+            {"gas": 100, "stake": 50, "price": 0},   
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "chains": [0],
+        "lambdas": {"apps": 1, "ops": 0, "sys": 0},
+    }
+
+def generate_validation_example_3_op():
+    """
+    VE3 (see overleaf)
+    """
+    return {
+        "apps": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "ops": [
+            {"gas": 100, "stake": 50, "price": 0},   
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "chains": [0],
+        "lambdas": {"apps": 0, "ops": 1, "sys": 0},
+    }
+
+
+def generate_validation_example_4_app():
+    """
+    VE3 (see overleaf)
+    """
+    return {
+        "apps": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "ops": [
+            {"gas": 100, "stake": 50, "price": 0},   
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "chains": [0],
+        "lambdas": {"apps": 1, "ops": 0, "sys": 0},
+    }
+
+
+def generate_validation_example_4_sys():
+    """
+    VE3 (see overleaf)
+    """
+    return {
+        "apps": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "ops": [
+            {"gas": 100, "stake": 50, "price": 0},   
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "chains": [0],
+        "lambdas": {"apps": 0, "ops": 0, "sys": 1},
+    }
+
+
+def generate_validation_example_5_op():
+    """
+    VE3 (see overleaf)
+    """
+    return {
+        "apps": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "ops": [
+            {"gas": 100, "stake": 50, "price": 0},   
+            {"gas": 100, "stake": 1000, "price": 10},   
+        ],
+        "chains": [0],
+        "lambdas": {"apps": 0, "ops": 1, "sys": 0},
+    }
+
+
+def generate_validation_example_5_sys():
+    """
+    VE3 (see overleaf)
+    """
+    return {
+        "apps": [
+            {"gas": 100, "stake": 50, "price": 10},   
+        ],
+        "ops": [
+            {"gas": 100, "stake": 50, "price": 0},   
+            {"gas": 100, "stake": 1000, "price": 10},   
+        ],
+        "chains": [0],
+        "lambdas": {"apps": 0, "ops": 0, "sys": 1},
+    }
+
+
 def generate_toy_instance_1():
     """
     Instance (1 chain; 1 app; 1 operator):
