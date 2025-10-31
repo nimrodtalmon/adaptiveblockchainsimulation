@@ -25,7 +25,7 @@ def main():
     # # Step 1: Generate (and print) a random instance
     for i in range(repetitions):
         print("\n>>> INSTANCE %d\n\n"%i)
-        instance = instance_generator.generate_validation_example_1()
+        instance = instance_generator.generate_toy_instance_0()
         print_instance(instance)
 
         # Step 2: Build and solve the optimization model
