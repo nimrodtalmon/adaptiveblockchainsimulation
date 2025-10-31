@@ -27,6 +27,20 @@ def take_care_of_random_seed_for_opt():
     return seed
 
 
+def take_care_of_random_seed():
+    if general_config.random_seed == -1:
+        # pick a random seed
+        seed = random.randint(0, 2**32 - 1)
+        # print(f"Random seed (opt): {seed}")
+    else:
+        seed = general_config.random_seed
+        # print(f"Random seed (opt): {seed}")
+
+    random.seed(seed)
+    np.random.seed(seed)
+    return seed
+
+
 def sample_int(low: int, high: int) -> int:
     """
     Inclusive integer sampler.

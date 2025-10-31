@@ -244,7 +244,7 @@ def generate_random_instance_1(
         app = {
             "gas": sample_int(10, 100),
             "stake": sample_int(10, 50),
-            "fee2gas": sample_int(1, 10)
+            "price": sample_int(1, 10)
         }
         apps.append(app)
 
@@ -253,7 +253,7 @@ def generate_random_instance_1(
         op = {
             "gas": sample_int(10, 500),
             "stake": sample_int(10, 100),
-            "fee2gas": sample_int(1, 10)
+            "price": sample_int(1, 10)
         }
         ops.append(op)
 
