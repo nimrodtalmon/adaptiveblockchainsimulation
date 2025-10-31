@@ -39,14 +39,13 @@ def make_simplex_grid(K: int = 13, limit: int = 100):
 
 def do_one_run_return(lambdas_override=None):
     """
-    Runs one simulation and returns a tuple:
-        (num_apps, num_ops, steady_state)
-    No file I/O here to keep parallel writes safe.
+    Runs one simulation using validation_example_3 with different lambda combinations
     """
     take_care_of_random_seed()
-    instance = instance_generator.generate_random_instance_1()
+    # Replace random instance with validation example 3
+    instance = instance_generator.generate_validation_example_5_op()
 
-    # --- OVERRIDE lambdas if provided ---
+    # Override lambdas if provided
     if lambdas_override is not None:
         instance['lambdas'] = {
             'apps': float(lambdas_override['apps']),
@@ -55,23 +54,19 @@ def do_one_run_return(lambdas_override=None):
         }
     solution, _, _, loss_hist, totvio_hist = solve_model(instance)
 
-    # print('losssssss:', loss_hist)
-    # print('totviooooo:', totvio_hist)
-
     steady_state = find_steady_state(
         loss_hist, totvio_hist,
         window=150, loss_std_tol=5e-3, mean_delta_tol=1e-3, viol_eps=1e-12
     )
-    # print("Steady-state budget:", steady_state)
 
-    num_apps = general_config.num_apps
-    num_ops  = general_config.num_ops
+    num_apps = len(instance['apps'])  # Changed to use actual instance size
+    num_ops = len(instance['ops'])    # Changed to use actual instance size
     lambdaapp = instance['lambdas']['apps']
-    lambdaop  = instance['lambdas']['ops']
-    lambdsys  = instance['lambdas']['sys']
-    apputil  = sum(solution['utilities'][1]) / len(solution['utilities'][1]) if len(solution['utilities'][1])>0 else 0
-    oputil   = sum(solution['utilities'][2]) / len(solution['utilities'][2]) if len(solution['utilities'][2])>0 else 0
-    sysutil  = solution['utilities'][3]
+    lambdaop = instance['lambdas']['ops'] 
+    lambdsys = instance['lambdas']['sys']
+    apputil = sum(solution['utilities'][1]) / len(solution['utilities'][1]) if len(solution['utilities'][1])>0 else 0
+    oputil = sum(solution['utilities'][2]) / len(solution['utilities'][2]) if len(solution['utilities'][2])>0 else 0
+    sysutil = solution['utilities'][3]
     return (num_apps, num_ops, steady_state, lambdaapp, lambdaop, lambdsys, apputil, oputil, sysutil)
 
 
@@ -85,32 +80,25 @@ def _append_lines(lines, path="logs/simplex.txt"):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run one or many simulations (optionally in parallel).")
-    parser.add_argument("--runs", type=int, default=1, help="How many runs to execute.")
-    parser.add_argument("--workers", type=int, default=1, help="How many parallel workers to use.")
+    parser = argparse.ArgumentParser(description="Run simulations with validation example 3 across lambda combinations.")
+    parser.add_argument("--runs", type=int, default=100, help="How many runs to execute.")
+    parser.add_argument("--workers", type=int, default=4, help="How many parallel workers to use.")
     parser.add_argument("--log", type=str, default="logs/simplex.txt", help="Output log file.")
     args = parser.parse_args()
 
-    # Build a fixed list of lambda triplets (includes vertices) to sweep over
-    lambda_grid = make_simplex_grid(K=13, limit=100)  # ~uniform; 100 points incl. (1,0,0),(0,1,0),(0,0,1)
+    # Increased grid density for more lambda combinations
+    lambda_grid = make_simplex_grid(K=20, limit=231)  # Creates ~231 points including vertices
 
     runs = max(1, args.runs)
     workers = max(1, args.workers)
     
-    # OVERRIDE COMMAND LINE
-    # runs_and_workers = 100
-    # runs = runs_and_workers
-    # workers = runs_and_workers
-
     if workers == 1:
-        # Sequential
         lines = []
         for i in range(runs):
             lambdas_override = lambda_grid[i % len(lambda_grid)]
             lines.append(do_one_run_return(lambdas_override=lambdas_override))
         _append_lines(lines, args.log)
     else:
-        # Parallel
         lines = []
         selected = [lambda_grid[i % len(lambda_grid)] for i in range(runs)]
         with ProcessPoolExecutor(max_workers=workers) as ex:
@@ -122,7 +110,6 @@ def main():
                     print("A run failed:", repr(e))
         if lines:
             _append_lines(lines, args.log)
-
 
 if __name__ == "__main__":
     main()
