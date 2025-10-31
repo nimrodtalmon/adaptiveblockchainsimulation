@@ -5,42 +5,6 @@ from utils.helpers import sample_int, generate_random_lambdas
 from config import GeneralConfig; general_config = GeneralConfig()
 
 
-def generate_timing_example_1(size):
-    """
-    Instance with `size` chains, `size` apps and `size` ops.
-    Values are simple random integers (do not need to be realistic).
-    """
-    apps = [
-        {
-            "gas": sample_int(10, 200),
-            "stake": sample_int(10, 100),
-            "price": sample_int(1, 20),
-            "fee2gas": sample_int(1, 20),
-        }
-        for _ in range(max(1, int(size)))
-    ]
-
-    ops = [
-        {
-            "gas": sample_int(10, 500),
-            "stake": sample_int(10, 200),
-            "price": sample_int(0, 20),
-            "fee2gas": sample_int(0, 20),
-        }
-        for _ in range(max(1, int(size)))
-    ]
-
-    chains = list(range(max(1, int(size))))
-
-    lambdas = generate_random_lambdas(("apps", "ops", "sys"))
-
-    return {
-        "apps": apps,
-        "ops": ops,
-        "chains": chains,
-        "lambdas": lambdas,
-    }
-
 def generate_validation_example_1():
     """
     Instance (1 chain; 1 app; 1 operator):
@@ -54,7 +18,7 @@ def generate_validation_example_1():
       Uo = 0.02
       Us = 1
       With lambdas 0.5, 0.3, 0.2:
-        U = 0.5 * 1 + 0.3 * 0.02 + 0.2 * 1 = 0.656
+        U = 0.5 * 1 + 0.3 * 0.02 + 0.2 * 1 = 0.706
     """
     return {
         "apps": [
@@ -72,17 +36,26 @@ def generate_validation_example_2():
     """
     Instance (1 chain; 1 app; 1 operator):
       a: gas 100; stake 50; price 10
-      o: gas 100; stake 50; price 0
+      o: gas 100; stake 50; price 10
+    
+    Solution:
+      Qmax = 1000
+      Solution {(a, o, 10)}
+      Ua = 1
+      Uo = 0.02
+      Us = 1
+      With lambdas 0.5, 0.3, 0.2:
+        U = 0.5 * 1 + 0.3 * 0.02 + 0.2 * 1 = 0.706
     """
     return {
         "apps": [
             {"gas": 100, "stake": 50, "price": 10},   
         ],
         "ops": [
-            {"gas": 100, "stake": 50, "price": 0},   
+            {"gas": 100, "stake": 50, "price": 10},   
         ],
         "chains": [0],
-        "lambdas": {"apps": 0.9, "ops": 0.05, "sys": 0.05},
+        "lambdas": {"apps": 0.5, "ops": 0.3, "sys": 0.2},
     }
 
 
@@ -106,10 +79,10 @@ def generate_toy_instance_1():
     """
     return {
         "apps": [
-            {"gas": 10, "stake": 5, "price": 2},   
+            {"gas": 10, "stake": 5, "fee2gas": 2},   
         ],
         "ops": [
-            {"gas": 15, "stake": 6, "price": 1},   
+            {"gas": 15, "stake": 6, "fee2gas": 1},   
         ],
         "chains": [0],
         "lambdas": {"apps": 0, "ops": 1, "sys": 0},

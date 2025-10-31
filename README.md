@@ -8,5 +8,5 @@ Current state:
 + Optimization: Only Nevergrad.
 + Simulation: Some toy examples, uniform instances, and some simplices.
 
-+ main_validation_example_i.py:
-  well, runs one validation example
++ main_validate_toy_example.py:
+  well, runs one toy example for code validation/verification
