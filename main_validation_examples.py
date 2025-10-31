@@ -11,24 +11,33 @@ def main():
 
     # Print hello
     print("\n>>> Adaptive Multichain Blockchain Simulation <<<")
+    
     # Take care for random seed
     seed = 42
     random.seed(seed)
     np.random.seed(seed)
 
-    repetitions = 1
+    # List of instance generator functions to run
+    instance_generators = [
+        ("Validation Example 1", instance_generator.generate_validation_example_1),
+        ("Validation Example 2", instance_generator.generate_validation_example_2)
+    ]
 
-    # # Step 1: Generate (and print) a random instance
-    for i in range(repetitions):
-        print("\n>>> INSTANCE %d\n\n"%i)
-        instance = instance_generator.generate_validation_example_1()
-        print_instance(instance)
+    # Run each instance
+    for name, generator in instance_generators:
+        print(f"\n>>> {name} <<<\n")
+        
+        # Generate and print instance
+        instance = generator()
+        # print_instance(instance)
 
-        # Step 2: Build and solve the optimization model
+        # Solve the optimization model
         solution, score, constraints, loss_hist, totvio_hist = solve_model(instance)
 
-        # Step 3: Summarize results
-        print_solution_with_utilities_and_constraints(solution, solution["utilities"], constraints, instance)
+        # Print results
+        print(f"\nFinal Score for {name}: {score[0]:.6f}")
+        # print_solution_with_utilities_and_constraints(solution, solution["utilities"], constraints, instance)
+        print("\n" + "="*50)
 
 if __name__ == "__main__":
     main()
