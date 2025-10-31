@@ -16,7 +16,7 @@ class GeneralConfig:
     # nevergrad_optimizer: Callable[..., Any] =  ng.optimizers.NGOpt
     # nevergrad_optimizer: Callable[..., Any] = altopt.MyAdaptiveDiscretePortfolio
     
-    nevergrad_budget: int = 100
+    nevergrad_budget: int = 10
     nevergrad_num_workers: int = 1
 
     # Instance parameters
