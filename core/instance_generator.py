@@ -106,10 +106,10 @@ def generate_toy_instance_1():
     """
     return {
         "apps": [
-            {"gas": 10, "stake": 5, "fee2gas": 2},   
+            {"gas": 10, "stake": 5, "price": 2},   
         ],
         "ops": [
-            {"gas": 15, "stake": 6, "fee2gas": 1},   
+            {"gas": 15, "stake": 6, "price": 1},   
         ],
         "chains": [0],
         "lambdas": {"apps": 0, "ops": 1, "sys": 0},
