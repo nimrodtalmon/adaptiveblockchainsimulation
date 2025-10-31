@@ -106,6 +106,15 @@ def print_solution_with_utilities_and_constraints(solution, utilities, constrain
     print(f"  Violations: {constraints}")
 
 
+# def print_solution_with_utilities_and_constraints(solution, utilities, constraints): 
+def print_optimal_utility(solution, utilities, constraints, instance):  #Haim
+    """
+    Pretty-print a solution with just utility.
+    """
+    print("\n=== Solution ===")
+
+    print(f"  Total (weighted):    {utilities[0]:.3f}")
+
 
 def get_fee2gas_solution_chain(solution, instance):
     # Definition of entities

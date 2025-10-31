@@ -55,7 +55,7 @@ def generate_validation_example_2():
             {"gas": 100, "stake": 50, "price": 10},   
         ],
         "chains": [0],
-        "lambdas": {"apps": 0.5, "ops": 0.3, "sys": 0.2},
+        "lambdas": {"apps": 0.9, "ops": 0.05, "sys": 0.05},
     }
 
 
