@@ -184,8 +184,9 @@ def evaluate_utilities(app_assignments, op_assignments, fee2gas_chains, instance
 
     # First, some upper bounds for normalization
     total_gas_supply = sum(op["gas"] for op in ops)
+    total_gas_demand = sum(app["gas"] for app in apps)
     max_fee2gas = max(app["price"] for app in apps)
-    Qmax_opsys = total_gas_supply * max_fee2gas + 1e-12
+    Qmax_opsys = min(total_gas_supply, total_gas_demand) * max_fee2gas + 1e-12
 
     # app util
     app_util = []
