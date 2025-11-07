@@ -23,10 +23,10 @@ def main():
         # ("Validation Example 2", instance_generator.generate_validation_example_2),
         # ("Validation Example 3 app", instance_generator.generate_validation_example_3_app),
         # ("Validation Example 3 op", instance_generator.generate_validation_example_3_op),
-        # ("Validation Example 4 app", instance_generator.generate_validation_example_4_app),
-        # ("Validation Example 4 sys", instance_generator.generate_validation_example_4_sys)
-        ("Validation Example 5 op", instance_generator.generate_validation_example_5_op),
-        ("Validation Example 5 sys", instance_generator.generate_validation_example_5_sys)
+        ("Validation Example 4 app", instance_generator.generate_validation_example_4_app),
+        ("Validation Example 4 sys", instance_generator.generate_validation_example_4_sys)
+        # ("Validation Example 5 op", instance_generator.generate_validation_example_5_op),
+        # ("Validation Example 5 sys", instance_generator.generate_validation_example_5_sys)
     ]
 
     # Run each instance
