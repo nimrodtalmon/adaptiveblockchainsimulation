@@ -269,8 +269,51 @@ def generate_random_instance_1(
         "lambdas": lambdas
     }
 
+def generate_simplex_instance_1(price_spread: float = 0.6,
+                                stake_skew: float = 0.7,
+                                D: int = 100,
+                                pmax: float = 10.0):
+    """
+    Parametric instance (1 app, 3 ops) exhibiting all three misalignments.
+    - App: gas D, stake 0 (non-binding), price cap pmax.
+    - Ops: three operators, each gas=50; two low-floor (p_min=0), one high-floor (p_min=kappa*pmax).
+            Stakes sum to 1: whale has sigma, each low-floor has (1-sigma)/2.
+    Notes:
+      * Midpoint pricing and utilities are applied downstream (core model).
+      * Any bundle with >=2 ops can serve full demand (sum gas >= D).
+    """
+    assert 0.0 < price_spread <= 1.0, "kappa must be in (0,1]"
+    assert 0.0 < stake_skew < 1.0, "sigma must be in (0,1)"
 
-def generate_simplex_instance_1(
+    # App
+    apps = [
+        {"gas": float(D), "stake": 0.0, "price": float(pmax)}  # price = p_max(a)
+    ]
+
+    # Operators: two low-floor, one high-floor ("whale")
+    op_gas = 50.0
+    low_stake = (1.0 - stake_skew) / 2.0
+    ops = [
+        {"gas": op_gas, "stake": low_stake, "price": 0.0},                 # o_L^(1): p_min = 0
+        {"gas": op_gas, "stake": low_stake, "price": 0.0},                 # o_L^(2): p_min = 0
+        {"gas": op_gas, "stake": float(stake_skew), "price": float(price_spread*pmax)} # o_H:     p_min = kappa * p_max
+    ]
+
+    # Single logical “market” (ephemeral chains are formed downstream by subsets of ops)
+    chains = [0]
+
+    # Default lambdas (you’ll sweep these over the simplex in experiments)
+    lambdas = {"apps": 1/3, "ops": 1/3, "sys": 1/3}
+
+    return {
+        "apps": apps,
+        "ops": ops,
+        "chains": chains,
+        "lambdas": lambdas,
+        "params": {"price_spread": price_spread, "stake_skew": stake_skew, "D": D, "pmax": pmax}
+    }
+
+def generate_simplex_instance_old_1(
     num_apps=general_config.num_apps,
     num_ops=general_config.num_ops,
     num_chains=general_config.num_chains,

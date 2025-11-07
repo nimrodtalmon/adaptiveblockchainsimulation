@@ -6,13 +6,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 from pathlib import Path
+from functools import partial
+import itertools
 
 # -------------------------------
 # CONFIG – you can edit these
 # -------------------------------
-NUMBER_OF_EXPERIMENTS = 3              # like your original outer script
-LOG_PATH = "logs/simplex.txt"
-PLOT_PATH = "plots/simplex.png"
+NUMBER_OF_EXPERIMENTS = 5              # like your original outer script
 RUNS_PER_CALL = 100                    # was --runs in the second script
 WORKERS_PER_CALL = 4                   # was --workers in the second script
 
@@ -114,7 +114,7 @@ def do_one_run_return(instance_without_lambdas, lambdas_override=None):
     )
 
 
-def _append_lines(lines, path=LOG_PATH):
+def _append_lines(lines, path="logs/simplex.txt"):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "a") as f:
         for (
@@ -165,8 +165,8 @@ def run_simplex_batch(instance_without_lambdas, runs: int, workers: int, log_pat
 
 
 def plot_simplex_from_file(
-    input_path: str = LOG_PATH,
-    output_path: str = PLOT_PATH,
+    input_path: str = "logs/simplex.txt",
+    output_path: str = "plots/simplex.png",
     assume_normalized: bool = True,
     figsize_in=(15, 5),
     dpi=200,
@@ -283,27 +283,42 @@ def plot_simplex_from_file(
     fig.savefig(output_path)
     print(f"Saved: {output_path}")
 
-
-def main():
+def one_main_for_price_spread_and_stake_skew(price_spread: float, stake_skew: float):
+    LOG_PATH = f"logs/simplex_{price_spread}_{stake_skew}.txt"
     path = Path(LOG_PATH)
     if path.exists():
         path.unlink()
 
+    generator_to_use = partial(
+        instance_generator.generate_simplex_instance_1, 
+        price_spread = price_spread,
+        stake_skew = stake_skew)
+
     # run the simplex generator several times
     for _ in range(NUMBER_OF_EXPERIMENTS):
         run_simplex_batch(
-            instance_without_lambdas=instance_generator.generate_validation_example_5_op,
+            instance_without_lambdas=generator_to_use,
             runs=RUNS_PER_CALL,
             workers=WORKERS_PER_CALL,
             log_path=LOG_PATH,
         )
 
     # then plot
+    PLOT_PATH = f"plots/simplex_{price_spread}_{stake_skew}.png"
     plot_simplex_from_file(
         input_path=LOG_PATH,
         output_path=PLOT_PATH,
         assume_normalized=True,
     )
+
+def main():
+
+    for price_spread, stake_skew in itertools.product(
+        np.arange(0.01, 1.01, 0.2),  # include 1.0
+        np.arange(0.01, 1.01, 0.2)
+    ):
+        # print(price_spread, stake_skew)
+        one_main_for_price_spread_and_stake_skew(price_spread, stake_skew)
 
 if __name__ == "__main__":
     main()
