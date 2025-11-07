@@ -12,7 +12,7 @@ import itertools
 # -------------------------------
 # CONFIG – you can edit these
 # -------------------------------
-NUMBER_OF_EXPERIMENTS = 5              # like your original outer script
+NUMBER_OF_EXPERIMENTS = 1              # like your original outer script
 RUNS_PER_CALL = 100                    # was --runs in the second script
 WORKERS_PER_CALL = 4                   # was --workers in the second script
 
@@ -314,8 +314,8 @@ def one_main_for_price_spread_and_stake_skew(price_spread: float, stake_skew: fl
 def main():
 
     for price_spread, stake_skew in itertools.product(
-        np.arange(0.01, 1.01, 0.2),  # include 1.0
-        np.arange(0.01, 1.01, 0.2)
+        [0.3, 0.6, 0.9],
+        [0.3, 0.6, 0.9]
     ):
         # print(price_spread, stake_skew)
         one_main_for_price_spread_and_stake_skew(price_spread, stake_skew)
