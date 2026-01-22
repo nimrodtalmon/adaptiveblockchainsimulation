@@ -1,8 +1,125 @@
 # core/instance_generator.py
 import random
-from typing import Dict, Tuple
 from utils.helpers import sample_int, generate_random_lambdas
 from config import GeneralConfig; general_config = GeneralConfig()
+from typing import Dict, Any, List, Optional
+
+
+def generate_simplex_big_instance(
+    price_spread: float = 0.6,   # kappa in (0,1]
+    stake_skew: float = 0.7,     # sigma in (0,1)
+    D: int = 100,                # total demand D_tot
+    pmax: float = 10.0,          # common app price cap p_max
+    n_apps: int = 10,
+    n_ops: int = 20,
+    oversupply: float = 0.75,    # rho in (0,1): total capacity = D / rho
+    high_floor_frac: float = 0.3,# alpha in [0,1]
+    seed: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Distributional "big" instance for simplex experiments (directly translatable from the math spec).
+
+    Apps:
+      - n_apps identical applications, total demand D split equally.
+      - each has price cap pmax, stake 0 (non-binding).
+
+    Ops:
+      - n_ops operators with equal capacity; total capacity = D/oversupply.
+      - a uniformly random subset H of size floor(alpha*n_ops) are "high-floor":
+            p_min = price_spread * pmax
+        others are "low-floor":
+            p_min = 0
+      - choose a whale uniformly at random; assign it stake=stake_skew;
+        all others share remaining stake equally.
+
+    Notes:
+      * Pricing rule and utilities are applied downstream (core model).
+      * We keep one logical market; subsets of ops form ephemeral chains downstream.
+    """
+    assert 0.0 < price_spread <= 1.0, "price_spread (kappa) must be in (0,1]"
+    assert 0.0 < stake_skew < 1.0, "stake_skew (sigma) must be in (0,1)"
+    assert D > 0 and pmax > 0.0, "D and pmax must be positive"
+    assert n_apps >= 1 and n_ops >= 2, "need at least 1 app and at least 2 ops"
+    assert 0.0 < oversupply < 1.0, "oversupply (rho) must be in (0,1)"
+    assert 0.0 <= high_floor_frac <= 1.0, "high_floor_frac (alpha) must be in [0,1]"
+
+    rng = random.Random(seed)
+
+    # Apps: identical, split total demand evenly
+    gas_per_app = float(D) / float(n_apps)
+    apps: List[Dict[str, float]] = [
+        {"gas": gas_per_app, "stake": 0.0, "price": float(pmax)}
+        for _ in range(n_apps)
+    ]
+
+    # Operator capacities: equal, scaled to total capacity D/oversupply
+    total_capacity = float(D) / float(oversupply)
+    gas_per_op = total_capacity / float(n_ops)
+
+    # High-floor subset H: uniform among all subsets of fixed size m
+    m = int(high_floor_frac * n_ops)  # == floor(alpha*n_ops) for alpha>=0
+    m = max(0, min(m, n_ops))
+    H = set(rng.sample(range(n_ops), k=m)) if m > 0 else set()
+
+    # Whale: uniform over operators
+    whale_idx = rng.randrange(n_ops)
+
+    # Stakes
+    if n_ops == 1:
+        # (Shouldn't happen due to assert, but keep safe.)
+        stakes = [1.0]
+    else:
+        other_stake = (1.0 - stake_skew) / float(n_ops - 1)
+        stakes = [other_stake] * n_ops
+        stakes[whale_idx] = float(stake_skew)
+
+    # Operator price floors
+    high_floor_price = float(price_spread) * float(pmax)
+
+    ops: List[Dict[str, float]] = []
+    for i in range(n_ops):
+        p_min = high_floor_price if i in H else 0.0
+        ops.append({"gas": float(gas_per_op), "stake": float(stakes[i]), "price": float(p_min)})
+
+    # Single logical “market”
+    chains = [0]
+
+    # Default lambdas (swept over simplex downstream)
+    lambdas = generate_random_lambdas(("apps", "ops", "sys"))
+
+    return {
+        "apps": apps,
+        "ops": ops,
+        "chains": chains,
+        "lambdas": lambdas,
+        "params": {
+            "price_spread": price_spread,
+            "stake_skew": stake_skew,
+            "D_tot": D,
+            "pmax": pmax,
+            "n_apps": n_apps,
+            "n_ops": n_ops,
+            "oversupply": oversupply,
+            "high_floor_frac": high_floor_frac,
+            "seed": seed,
+            "high_floor_count": m,
+            "whale_idx": whale_idx,
+        },
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def generate_validation_example_1():
