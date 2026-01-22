@@ -8,17 +8,6 @@ import matplotlib.tri as mtri
 from pathlib import Path
 from functools import partial
 import itertools
-
-# -------------------------------
-# CONFIG – you can edit these
-# -------------------------------
-NUMBER_OF_EXPERIMENTS = 1              # like your original outer script
-RUNS_PER_CALL = 100                    # was --runs in the second script
-WORKERS_PER_CALL = 4                   # was --workers in the second script
-
-# --------------------------------------------------------------------
-# imports from your project – these stay as-is, you still need them
-# --------------------------------------------------------------------
 from config import GeneralConfig, OneInstanceConfig  # noqa: F401
 from core import instance_generator
 from utils.helpers import (
@@ -27,6 +16,12 @@ from utils.helpers import (
 )
 from core.optimizer import solve_model
 
+# -------------------------------
+# CONFIG
+# -------------------------------
+NUMBER_OF_EXPERIMENTS = 1              
+RUNS_PER_CALL = 100                    
+WORKERS_PER_CALL = 4     
 
 # ====================================================================
 # PART 1: the code that used to be in main_put_simplex_lines_in_file.py

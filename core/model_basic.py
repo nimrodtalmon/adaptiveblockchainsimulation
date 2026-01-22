@@ -1,5 +1,7 @@
 # core/model_basic.py
 
+from xml.etree.ElementPath import ops
+from xml.etree.ElementPath import ops
 import nevergrad as ng
 import numpy as np
 
@@ -186,7 +188,8 @@ def evaluate_utilities(app_assignments, op_assignments, fee2gas_chains, instance
     total_gas_supply = sum(op["gas"] for op in ops)
     total_gas_demand = sum(app["gas"] for app in apps)
     max_fee2gas = max(app["price"] for app in apps)
-    Qmax_opsys = min(total_gas_supply, total_gas_demand) * max_fee2gas + 1e-12
+    Qmax_sys = min(total_gas_supply, total_gas_demand) * max_fee2gas + 1e-12
+    Qmax_op = Qmax_sys / min(op["stake"] for op in ops) + 1e-12
 
     # app util
     app_util = []
@@ -208,13 +211,12 @@ def evaluate_utilities(app_assignments, op_assignments, fee2gas_chains, instance
         if c == -1 or not ops_on_chain[c]:
             op_util.append(0)
         else:
-            share = 1 / len(ops_on_chain[c])
-            fee = fee2gas_chain[c] * gas[c] / Qmax_opsys
-
-            op_util.append((fee * share) / ops[o]["stake"])
+            fee_c = fee2gas_chain[c] * gas[c]
+            stake_c = stake_chain[c]
+            op_util.append((fee_c / stake_c) / Qmax_op)
 
     # sys util
-    sys_util = sum(fee2gas_chain[c] * gas[c] for c in chains) / Qmax_opsys
+    sys_util = sum(fee2gas_chain[c] * gas[c] for c in chains) / Qmax_sys
 
     # total util
     total_util = (lambdas["apps"] * sum(app_util) / len(apps) +
