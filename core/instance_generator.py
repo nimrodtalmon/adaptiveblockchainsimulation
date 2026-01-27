@@ -2,90 +2,85 @@
 import random
 from utils.helpers import sample_int, generate_random_lambdas
 from config import GeneralConfig; general_config = GeneralConfig()
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional
+import random
 
 
-def generate_simplex_big_instance(
+def generate_simplex_instance_big_1(
     price_spread: float = 0.6,   # kappa in (0,1]
-    stake_skew: float = 0.7,     # sigma in (0,1)
-    D: int = 100,                # total demand D_tot
-    pmax: float = 10.0,          # common app price cap p_max
+    stake_skew: float = 0.95,    # "extremeness": closer to 1 => tinier whale stake (see eps below)
+    D: int = 100,                # total demand (see note: pick ~100*K for strongest effect)
+    pmax: float = 10.0,
     n_apps: int = 10,
-    n_ops: int = 20,
-    oversupply: float = 0.75,    # rho in (0,1): total capacity = D / rho
-    high_floor_frac: float = 0.3,# alpha in [0,1]
+    n_ops: int = 21,             # rounded down to 3K
+    whale_gas_mult: float = 2.4, # whale gas = whale_gas_mult * low_gas
+    whale_price_noise: float = 0.6,  # per-triple whale floor multiplier in [1-noise, 1+noise]
     seed: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
-    Distributional "big" instance for simplex experiments (directly translatable from the math spec).
+    "Big" instance = K replicated copies of the original 1-app/3-op misalignment gadget,
+    with *extreme* governance sensitivity.
 
-    Apps:
-      - n_apps identical applications, total demand D split equally.
-      - each has price cap pmax, stake 0 (non-binding).
+    Minimal changes relative to generate_simplex_instance_1:
+      (i) replicate the 3-op gadget K times (disjoint triples),
+      (ii) split the single app into n_apps apps (equal split),
+      (iii) make the whale stake tiny (yield leverage) via eps,
+      (iv) make the whale have larger capacity (so it matters),
+      (v) add mild heterogeneity in whale floors across triples.
 
-    Ops:
-      - n_ops operators with equal capacity; total capacity = D/oversupply.
-      - a uniformly random subset H of size floor(alpha*n_ops) are "high-floor":
-            p_min = price_spread * pmax
-        others are "low-floor":
-            p_min = 0
-      - choose a whale uniformly at random; assign it stake=stake_skew;
-        all others share remaining stake equally.
-
-    Notes:
-      * Pricing rule and utilities are applied downstream (core model).
-      * We keep one logical market; subsets of ops form ephemeral chains downstream.
+    Returns only what an instance needs: apps, ops, chains, lambdas.
     """
-    assert 0.0 < price_spread <= 1.0, "price_spread (kappa) must be in (0,1]"
-    assert 0.0 < stake_skew < 1.0, "stake_skew (sigma) must be in (0,1)"
-    assert D > 0 and pmax > 0.0, "D and pmax must be positive"
-    assert n_apps >= 1 and n_ops >= 2, "need at least 1 app and at least 2 ops"
-    assert 0.0 < oversupply < 1.0, "oversupply (rho) must be in (0,1)"
-    assert 0.0 <= high_floor_frac <= 1.0, "high_floor_frac (alpha) must be in [0,1]"
+    assert 0.0 < price_spread <= 1.0, "kappa must be in (0,1]"
+    assert 0.0 < stake_skew < 1.0, "stake_skew must be in (0,1)"
+    assert D > 0 and pmax > 0.0
+    assert n_apps >= 1 and n_ops >= 3
+    assert whale_gas_mult >= 1.0
+    assert 0.0 <= whale_price_noise < 1.0
 
     rng = random.Random(seed)
 
-    # Apps: identical, split total demand evenly
+    # Number of 3-op gadgets
+    K = max(1, n_ops // 3)
+    n_ops_eff = 3 * K
+
+    # Apps: n_apps copies, split total demand evenly
     gas_per_app = float(D) / float(n_apps)
-    apps: List[Dict[str, float]] = [
-        {"gas": gas_per_app, "stake": 0.0, "price": float(pmax)}
-        for _ in range(n_apps)
-    ]
+    apps = [{"gas": gas_per_app, "stake": 0.0, "price": float(pmax)} for _ in range(n_apps)]
 
-    # Operator capacities: equal, scaled to total capacity D/oversupply
-    total_capacity = float(D) / float(oversupply)
-    gas_per_op = total_capacity / float(n_ops)
+    # Operators: K triples
+    low_gas = 50.0
+    whale_gas = float(whale_gas_mult) * low_gas
 
-    # High-floor subset H: uniform among all subsets of fixed size m
-    m = int(high_floor_frac * n_ops)  # == floor(alpha*n_ops) for alpha>=0
-    m = max(0, min(m, n_ops))
-    H = set(rng.sample(range(n_ops), k=m)) if m > 0 else set()
+    # Extreme yield lever: tiny whale stake
+    # Interpret stake_skew as "how extreme": close to 1 => eps ~ 0
+    eps = max(1e-5, 1.0 - float(stake_skew))      # whale stake inside each triple before global scaling
+    low_stake = (1.0 - eps) / 2.0
 
-    # Whale: uniform over operators
-    whale_idx = rng.randrange(n_ops)
+    base_whale_floor = float(price_spread) * float(pmax)
 
-    # Stakes
-    if n_ops == 1:
-        # (Shouldn't happen due to assert, but keep safe.)
-        stakes = [1.0]
-    else:
-        other_stake = (1.0 - stake_skew) / float(n_ops - 1)
-        stakes = [other_stake] * n_ops
-        stakes[whale_idx] = float(stake_skew)
+    ops = []
+    for t in range(K):
+        # mild heterogeneity: some whales are "more expensive" than others
+        mult = (1.0 - whale_price_noise) + 2.0 * whale_price_noise * rng.random()  # in [1-noise, 1+noise]
+        whale_floor_t = min(float(pmax), base_whale_floor * mult)
 
-    # Operator price floors
-    high_floor_price = float(price_spread) * float(pmax)
+        triple = [
+            {"gas": low_gas,  "stake": low_stake, "price": 0.0},
+            {"gas": low_gas,  "stake": low_stake, "price": 0.0},
+            {"gas": whale_gas,"stake": eps,       "price": whale_floor_t},
+        ]
 
-    ops: List[Dict[str, float]] = []
-    for i in range(n_ops):
-        p_min = high_floor_price if i in H else 0.0
-        ops.append({"gas": float(gas_per_op), "stake": float(stakes[i]), "price": float(p_min)})
+        # break index symmetry (doesn't change the gadget)
+        rng.shuffle(triple)
 
-    # Single logical “market”
+        # scale stakes so total stake across all ops sums to 1
+        for o in triple:
+            o["stake"] = float(o["stake"]) / float(K)
+            ops.append(o)
+
     chains = [0]
-
-    # Default lambdas (swept over simplex downstream)
-    lambdas = generate_random_lambdas(("apps", "ops", "sys"))
+    lambdas = {"apps": 1 / 3, "ops": 1 / 3, "sys": 1 / 3}
 
     return {
         "apps": apps,
@@ -95,15 +90,15 @@ def generate_simplex_big_instance(
         "params": {
             "price_spread": price_spread,
             "stake_skew": stake_skew,
-            "D_tot": D,
+            "D": D,
             "pmax": pmax,
             "n_apps": n_apps,
-            "n_ops": n_ops,
-            "oversupply": oversupply,
-            "high_floor_frac": high_floor_frac,
+            "n_ops": n_ops_eff,
+            "K": K,
+            "whale_gas_mult": whale_gas_mult,
+            "whale_price_noise": whale_price_noise,
             "seed": seed,
-            "high_floor_count": m,
-            "whale_idx": whale_idx,
+            "eps_whale_stake_per_triple": eps,
         },
     }
 
@@ -495,7 +490,7 @@ def generate_simplex_instance_old_1(
         for g, s, f in zip(ops_gas, ops_stake, ops_fee2gas)
     ]
 
-    chains = list(range(num_chains))
+    # chains = list(range(num_chains))
 
     # Random convex combination for governance weights
     lambdas = generate_random_lambdas(("apps", "ops", "sys"))
@@ -503,6 +498,6 @@ def generate_simplex_instance_old_1(
     return {
         "apps": apps,
         "ops": ops,
-        "chains": chains,
+        "chains": [0],
         "lambdas": lambdas,
     }

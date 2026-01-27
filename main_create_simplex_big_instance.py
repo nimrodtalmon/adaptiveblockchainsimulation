@@ -10,6 +10,7 @@ from functools import partial
 import itertools
 from config import GeneralConfig, OneInstanceConfig  # noqa: F401
 from core import instance_generator
+from utils import helpers
 from utils.helpers import (
     take_care_of_random_seed,
     find_steady_state,
@@ -20,7 +21,7 @@ from core.optimizer import solve_model
 # CONFIG
 # -------------------------------
 NUMBER_OF_EXPERIMENTS = 1              
-RUNS_PER_CALL = 100                    
+RUNS_PER_CALL = 25                    
 WORKERS_PER_CALL = 4     
 
 # ====================================================================
@@ -64,7 +65,7 @@ def do_one_run_return(instance_without_lambdas, lambdas_override=None):
     # your instance generator
     instance = instance_without_lambdas()
 
-    # Override lambdas if provided
+     # Override lambdas if provided
     if lambdas_override is not None:
         instance['lambdas'] = {
             'apps': float(lambdas_override['apps']),
@@ -278,16 +279,13 @@ def plot_simplex_from_file(
     fig.savefig(output_path)
     print(f"Saved: {output_path}")
 
-def one_main_for_price_spread_and_stake_skew(price_spread: float, stake_skew: float):
-    LOG_PATH = f"logs/big_simplex_{price_spread}_{stake_skew}.txt"
+def main():
+    LOG_PATH = f"logs/big_simplex.txt"
     path = Path(LOG_PATH)
     if path.exists():
         path.unlink()
 
-    generator_to_use = partial(
-        instance_generator.generate_simplex_big_instance, 
-        price_spread = price_spread,
-        stake_skew = stake_skew)
+    generator_to_use = instance_generator.generate_simplex_instance_big_1
 
     # run the simplex generator several times
     for _ in range(NUMBER_OF_EXPERIMENTS):
@@ -299,21 +297,12 @@ def one_main_for_price_spread_and_stake_skew(price_spread: float, stake_skew: fl
         )
 
     # then plot
-    PLOT_PATH = f"plots/big_simplex_{price_spread}_{stake_skew}.png"
+    PLOT_PATH = f"plots/big_simplex.png"
     plot_simplex_from_file(
         input_path=LOG_PATH,
         output_path=PLOT_PATH,
         assume_normalized=True,
     )
-
-def main():
-
-    for price_spread, stake_skew in itertools.product(
-        [0.3, 0.6, 0.9],
-        [0.3, 0.6, 0.9]
-    ):
-        # print(price_spread, stake_skew)
-        one_main_for_price_spread_and_stake_skew(price_spread, stake_skew)
 
 if __name__ == "__main__":
     main()
