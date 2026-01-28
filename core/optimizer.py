@@ -179,3 +179,133 @@ def solve_model(instance, real_budget=general_config.nevergrad_budget, verbose=T
         "utilities": evaluate_utilities(best_app_assignment, best_op_assignment, best_fee2gas_chains, instance)
     }, score, constraints, loss_hist, totvio_hist
 
+
+
+
+def solve_model_until_plateau(
+    instance,
+    real_budget=general_config.nevergrad_budget,
+    verbose=True,
+    # plateau params
+    window=50,
+    patience=3,
+    rel_improve_eps=3e-4,
+    min_iters=None,          # if None => window*patience
+    check_every=1,           # allow checking less frequently if desired
+):
+    """
+    Like solve_model, but stops early when a plateau is detected.
+
+    Plateau definition:
+      Let best_t be best-so-far loss up to iteration t.
+      For t >= window, define rel_gain = (best_{t-window} - best_t) / max(1, |best_{t-window}|)
+      If rel_gain < rel_improve_eps for 'patience' consecutive checks -> plateau.
+
+    Returns:
+      best_solution_dict, score, constraints, loss_hist, totvio_hist, iters_used
+    """
+    parametrization, evaluate, constraints = define_problem_2(instance)
+
+    opt = general_config.nevergrad_optimizer()(
+        parametrization=parametrization,
+        budget=real_budget,
+        num_workers=general_config.nevergrad_num_workers
+    )
+    parametrization.random_state.seed(hlp.take_care_of_random_seed_for_opt())
+    opt._rng.seed(hlp.take_care_of_random_seed_for_opt())
+
+    loss_hist = []
+    totvio_hist = []
+
+    stats = EvaluatorWithStats(
+        len(instance["apps"]),
+        len(instance["ops"]),
+        evaluate,
+        evaluate_utilities,
+        constraints,
+        evaluate_constraints
+    )
+
+    # plateau bookkeeping
+    if min_iters is None:
+        min_iters = window * patience
+    best_so_far = float("inf")
+    best_hist = []  # best-so-far per iteration (same length as loss_hist)
+    bad_windows = 0
+
+    # Run optimization with early stop
+    iters_used = 0
+    for it in range(real_budget):
+        cand = opt.ask()
+
+        value = stats.evaluate_cannocalized(**cand.kwargs)
+        vlist = stats.constraints_canonicalized(**cand.kwargs)
+        total_vio = float(sum(vlist[0]) + sum(vlist[1]))
+
+        loss_val = float(value)
+        loss_hist.append(loss_val)
+        totvio_hist.append(total_vio)
+
+        # tell (flatten constraint lists)
+        flat_v = vlist[0] + vlist[1]
+        opt.tell(cand, value, flat_v if flat_v else None)
+
+        # update best-so-far (Nevergrad minimizes)
+        if loss_val < best_so_far:
+            best_so_far = loss_val
+        best_hist.append(best_so_far)
+
+        iters_used = it + 1
+
+        # plateau check
+        if iters_used >= min_iters and (iters_used % check_every == 0):
+            if iters_used >= window + 1:
+                prev_best = best_hist[-window - 1]
+                curr_best = best_hist[-1]
+                rel_gain = (prev_best - curr_best) / max(1.0, abs(prev_best))
+
+                if rel_gain < rel_improve_eps:
+                    bad_windows += 1
+                else:
+                    bad_windows = 0
+
+                if bad_windows >= patience:
+                    if verbose:
+                        print(
+                            f"[plateau] it={iters_used} "
+                            f"rel_gain(last {window})={rel_gain:.3e} "
+                            f"eps={rel_improve_eps} "
+                            f"patience={patience}"
+                        )
+                    break
+
+    # Get recommendation from whatever budget we used
+    recommendation = opt.provide_recommendation()
+
+    best_kwargs = recommendation.kwargs
+    best_app_assignment = best_kwargs["app_assignments"]
+    best_op_assignment = best_kwargs["op_assignments"]
+    best_fee2gas_chains = best_kwargs["fee2gas_chains"]
+
+    score = stats.evaluate_utilities_canonicalized(
+        best_app_assignment, best_op_assignment, best_fee2gas_chains, instance
+    )
+    constraints_val = stats.evaluate_constraints_canonicalized(
+        best_app_assignment, best_op_assignment, best_fee2gas_chains, instance
+    )
+
+    return (
+        {
+            "app_assignments": best_app_assignment,
+            "op_assignments": best_op_assignment,
+            "fee2gas_chains": best_fee2gas_chains,
+            "utilities": evaluate_utilities(
+                best_app_assignment, best_op_assignment, best_fee2gas_chains, instance
+            )
+        },
+        score,
+        constraints_val,
+        loss_hist,
+        totvio_hist,
+        iters_used
+    )
