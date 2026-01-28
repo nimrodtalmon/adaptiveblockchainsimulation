@@ -1,10 +1,157 @@
 # core/instance_generator.py
+from __future__ import annotations
 import random
 from utils.helpers import sample_int, generate_random_lambdas
 from config import GeneralConfig; general_config = GeneralConfig()
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 from typing import Any, Dict, Optional
 import random
+import math
+from typing import Any, Dict, List, Optional
+import numpy as np
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def _pareto_trunc(
+    rng: np.random.Generator,
+    alpha: float,
+    xmin: float,
+    xmax: float,
+    size: int,
+) -> np.ndarray:
+    """
+    Sample X ~ Pareto(xmin, alpha) and clamp to [xmin, xmax].
+    Here Pareto(xmin, alpha) has CDF: 1 - (xmin/x)^alpha for x >= xmin.
+    """
+    assert alpha > 0.0
+    assert xmin > 0.0 and xmax > xmin
+    u = rng.random(size)
+    x = xmin * (1.0 - u) ** (-1.0 / alpha)
+    return np.clip(x, xmin, xmax)
+def generate_realworldish_instance(
+    n_app: int = 50,
+    n_op: int = 30,
+    seed: int = 0,
+    # Apps: gas ~ ParetoTrunc(alpha_app, gmin, gmax)
+    alpha_app: float = 1.6,
+    gmin: float = 1.0,
+    gmax: float = 500.0,
+    # Ops: stake ~ ParetoTrunc(alpha_op, smin, smax)
+    alpha_op: float = 1.3,
+    smin: float = 1.0,
+    smax: float = 1000.0,
+    # Multiplicative couplings (lognormal factors)
+    # stake_app = gas_app * U,   U ~ LogNormal(mu_U, sigma_U)
+    mu_U: float = math.log(0.5),
+    sigma_U: float = 0.2,
+    # gas_op = stake_op * V,     V ~ LogNormal(mu_V, sigma_V)
+    mu_V: float = math.log(0.2),
+    sigma_V: float = 0.2,
+    # Prices (lognormal)
+    # price_app ~ LogNormal(mu_p, sigma_p)
+    # price_op  ~ LogNormal(mu_p + log(lambda_floor), sigma_p)
+    mu_p: float = math.log(10.0),
+    sigma_p: float = 0.4,
+    lambda_floor: float = 0.7,
+    # Optional slack control: target_slack = (sum gas_op)/(sum gas_app)
+    target_slack: Optional[float] = None,
+    rescale_slack_on: str = "ops",  # {"ops","apps"}
+) -> Dict[str, Any]:
+    """
+    Implements the LaTeX generator:
+
+    Apps:
+      gas_a      ~ ParetoTrunc(alpha_app, gmin, gmax)
+      stake_a    = gas_a * U_a,   U_a ~ LogNormal(mu_U, sigma_U)
+      gasprice_a ~ LogNormal(mu_p, sigma_p)
+
+    Ops:
+      stake_o    ~ ParetoTrunc(alpha_op, smin, smax)
+      gas_o      = stake_o * V_o, V_o ~ LogNormal(mu_V, sigma_V)
+      gasprice_o ~ LogNormal(mu_p + log(lambda_floor), sigma_p)
+
+    Returns an instance dict compatible with your existing format.
+    """
+    assert n_app > 0 and n_op > 0
+    assert 0.0 < lambda_floor <= 1.0
+    assert sigma_U >= 0.0 and sigma_V >= 0.0 and sigma_p >= 0.0
+    assert rescale_slack_on in {"ops", "apps"}
+
+    rng = np.random.default_rng(seed)
+
+    # --- Applications ---
+    gas_app = _pareto_trunc(rng, alpha_app, gmin, gmax, n_app)
+    U = rng.lognormal(mean=mu_U, sigma=sigma_U, size=n_app)
+    stake_app = gas_app * U
+    price_app = rng.lognormal(mean=mu_p, sigma=sigma_p, size=n_app)
+
+    # --- Operators ---
+    stake_op = _pareto_trunc(rng, alpha_op, smin, smax, n_op)
+    V = rng.lognormal(mean=mu_V, sigma=sigma_V, size=n_op)
+    gas_op = stake_op * V
+    price_op = rng.lognormal(mean=mu_p + math.log(lambda_floor), sigma=sigma_p, size=n_op)
+
+    apps: List[Dict[str, float]] = [
+        {"gas": float(gas_app[i]), "stake": float(stake_app[i]), "price": float(price_app[i])}
+        for i in range(n_app)
+    ]
+    ops: List[Dict[str, float]] = [
+        {"gas": float(gas_op[j]), "stake": float(stake_op[j]), "price": float(price_op[j])}
+        for j in range(n_op)
+    ]
+
+    chains = [0]  # ephemeral chains are formed downstream
+    lambdas = {"apps": 1 / 3, "ops": 1 / 3, "sys": 1 / 3}
+
+    params = {
+        "n_app": n_app,
+        "n_op": n_op,
+        "seed": seed,
+        "alpha_app": alpha_app,
+        "gmin": gmin,
+        "gmax": gmax,
+        "alpha_op": alpha_op,
+        "smin": smin,
+        "smax": smax,
+        "mu_U": mu_U,
+        "sigma_U": sigma_U,
+        "mu_V": mu_V,
+        "sigma_V": sigma_V,
+        "mu_p": mu_p,
+        "sigma_p": sigma_p,
+        "lambda_floor": lambda_floor,
+        "target_slack": target_slack,
+        "rescale_slack_on": rescale_slack_on,
+    }
+
+    return {
+        "apps": apps,
+        "ops": ops,
+        "chains": chains,
+        "lambdas": lambdas,
+        "params": params,
+    }
+
+
+
+
+
 
 
 def generate_simplex_instance_big_1(

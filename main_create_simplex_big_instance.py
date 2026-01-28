@@ -285,7 +285,7 @@ def main():
     if path.exists():
         path.unlink()
 
-    generator_to_use = instance_generator.generate_simplex_instance_big_1
+    generator_to_use = instance_generator.generate_realworldish_instance
 
     # run the simplex generator several times
     for _ in range(NUMBER_OF_EXPERIMENTS):

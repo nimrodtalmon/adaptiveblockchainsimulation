@@ -12,7 +12,7 @@ from core.canonicalized_evaluator import EvaluatorWithStats
 # warnings.filterwarnings("ignore", message="elements of z2") #Haim occur when usng NgOpt
 
 
-def solve_model(instance, verbose=True):
+def solve_model(instance, real_budget=general_config.nevergrad_budget, verbose=True):
     """
     Solves the model defined in model_basic.py using Nevergrad (NGOpt solver).
     
@@ -37,7 +37,7 @@ def solve_model(instance, verbose=True):
     # Set up Nevergrad optimizer - use for factory-instantiated optimizers
     opt = general_config.nevergrad_optimizer()(
           parametrization=parametrization, 
-          budget=general_config.nevergrad_budget,
+          budget=real_budget,
           num_workers=general_config.nevergrad_num_workers)
     parametrization.random_state.seed(hlp.take_care_of_random_seed_for_opt()) #Haim
     opt._rng.seed(hlp.take_care_of_random_seed_for_opt()) #Haim
