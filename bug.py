@@ -308,7 +308,6 @@ def one_main():
     # )
 
 def main():
-    print("bug")
     one_main()
 
 if __name__ == "__main__":
