@@ -20,7 +20,7 @@ from core.optimizer import solve_model
 # -------------------------------
 # CONFIG
 # -------------------------------
-NUMBER_OF_EXPERIMENTS = 1              
+NUMBER_OF_EXPERIMENTS = 10              
 RUNS_PER_CALL = 25                    
 WORKERS_PER_CALL = 4     
 
@@ -285,7 +285,7 @@ def main():
     if path.exists():
         path.unlink()
 
-    generator_to_use = instance_generator.generate_realworldish_instance
+    generator_to_use = instance_generator.generate_simplex_instance_big_1
 
     # run the simplex generator several times
     for _ in range(NUMBER_OF_EXPERIMENTS):
