@@ -309,8 +309,8 @@ def one_main_for_price_spread_and_stake_skew(price_spread: float, stake_skew: fl
 def main():
 
     for price_spread, stake_skew in itertools.product(
-        [0.3, 0.6, 0.9],
-        [0.3, 0.6, 0.9]
+        [0.99],
+        [0.99]
     ):
         # print(price_spread, stake_skew)
         one_main_for_price_spread_and_stake_skew(price_spread, stake_skew)

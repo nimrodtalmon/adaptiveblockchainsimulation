@@ -10,7 +10,6 @@ from functools import partial
 import itertools
 from config import GeneralConfig, OneInstanceConfig  # noqa: F401
 from core import instance_generator
-from utils import helpers
 from utils.helpers import (
     take_care_of_random_seed,
     find_steady_state,
@@ -20,8 +19,8 @@ from core.optimizer import solve_model
 # -------------------------------
 # CONFIG
 # -------------------------------
-NUMBER_OF_EXPERIMENTS = 10              
-RUNS_PER_CALL = 25                    
+NUMBER_OF_EXPERIMENTS = 1              
+RUNS_PER_CALL = 500                    
 WORKERS_PER_CALL = 4     
 
 # ====================================================================
@@ -65,7 +64,7 @@ def do_one_run_return(instance_without_lambdas, lambdas_override=None):
     # your instance generator
     instance = instance_without_lambdas()
 
-     # Override lambdas if provided
+    # Override lambdas if provided
     if lambdas_override is not None:
         instance['lambdas'] = {
             'apps': float(lambdas_override['apps']),
@@ -110,7 +109,7 @@ def do_one_run_return(instance_without_lambdas, lambdas_override=None):
     )
 
 
-def _append_lines(lines, path="logs/big_simplex.txt"):
+def _append_lines(lines, path="logs/big.txt"):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "a") as f:
         for (
@@ -161,8 +160,8 @@ def run_simplex_batch(instance_without_lambdas, runs: int, workers: int, log_pat
 
 
 def plot_simplex_from_file(
-    input_path: str = "logs/big_simplex.txt",
-    output_path: str = "plots/big_simplex.png",
+    input_path: str = "logs/big.txt",
+    output_path: str = "plots/big.png",
     assume_normalized: bool = True,
     figsize_in=(15, 5),
     dpi=200,
@@ -279,13 +278,13 @@ def plot_simplex_from_file(
     fig.savefig(output_path)
     print(f"Saved: {output_path}")
 
-def main():
-    LOG_PATH = f"logs/big_simplex.txt"
+def one_main_for_price_spread_and_stake_skew(price_spread: float, stake_skew: float):
+    LOG_PATH = f"logs/big.txt"
     path = Path(LOG_PATH)
     if path.exists():
         path.unlink()
 
-    generator_to_use = instance_generator.generate_simplex_instance_big_1
+    generator_to_use = instance_generator.generate_big_drama
 
     # run the simplex generator several times
     for _ in range(NUMBER_OF_EXPERIMENTS):
@@ -297,12 +296,21 @@ def main():
         )
 
     # then plot
-    PLOT_PATH = f"plots/big_simplex.png"
+    PLOT_PATH = f"plots/big.png"
     plot_simplex_from_file(
         input_path=LOG_PATH,
         output_path=PLOT_PATH,
         assume_normalized=True,
     )
+
+def main():
+
+    for price_spread, stake_skew in itertools.product(
+        [0.99],
+        [0.99]
+    ):
+        # print(price_spread, stake_skew)
+        one_main_for_price_spread_and_stake_skew(price_spread, stake_skew)
 
 if __name__ == "__main__":
     main()

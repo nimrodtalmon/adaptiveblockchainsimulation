@@ -10,6 +10,71 @@ import math
 from typing import Any, Dict, List, Optional
 import numpy as np
 
+
+
+
+
+
+def generate_big_drama(n: int = 10):
+    assert n >= 1
+    apps = [
+        {"gas": 100, "stake": 0.0, "price": 100}
+        for _ in range(n)
+    ]
+    ops = (
+        [{"gas": 50, "stake": 999, "price": 0.0} for _ in range(2 * n)] +  
+        [{"gas": 50, "stake": 0.1, "price": 100} for _ in range(n)]    
+    )
+    chains = [0]
+    lambdas = {"apps": 1/3, "ops": 1/3, "sys": 1/3}
+    return {
+        "apps": apps,
+        "ops": ops,
+        "chains": chains,
+        "lambdas": lambdas,
+        "params": {"n": n}
+    }
+
+
+
+
+
+
+
+
+
+
+
+def generate_small_drama():
+    # App
+    apps = [
+        {"gas": 100, "stake": 0.0, "price": 100}
+    ]
+    ops = [
+        {"gas": 50, "stake": 999, "price": 0.0},
+        {"gas": 50, "stake": 999, "price": 0.0},
+        {"gas": 50, "stake": 0.1, "price": 100}
+    ]
+    chains = [0]
+    lambdas = {"apps": 1/3, "ops": 1/3, "sys": 1/3}
+    return {
+        "apps": apps,
+        "ops": ops,
+        "chains": chains,
+        "lambdas": lambdas,
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 def _pareto_trunc(
     rng: np.random.Generator,
     alpha: float,
